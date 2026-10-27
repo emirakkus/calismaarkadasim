@@ -240,7 +240,7 @@ export default function Dashboard({
           icon={<TrendIcon />}
           iconBg="bg-emerald-50"
           iconColor="text-emerald-600"
-          title="Program ilerlemesi"
+          title="Program ilerlemesi (konu + görev)"
           value={`%${data.program.percent}`}
           barValue={data.program.percent}
           barGoal={100}

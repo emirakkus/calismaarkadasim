@@ -1,7 +1,8 @@
 import { db } from "@/db";
-import { tasks } from "@/db/schema";
+import { questionLogs, tasks } from "@/db/schema";
 import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError, asInt, TASK_STATUSES } from "@/lib/api";
+import { questionLogForCompletedTask } from "@/lib/task-question-log";
 import { and, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +35,34 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body.isPinned !== undefined) update.isPinned = Boolean(body.isPinned);
     if (body.orderIndex !== undefined) update.orderIndex = asInt(body.orderIndex);
 
-    const [updated] = await db.update(tasks).set(update).where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId))).returning();
+    const updated = await db.transaction(async (tx) => {
+      const [task] = await tx
+        .update(tasks)
+        .set(update)
+        .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
+        .returning();
+      if (!task) return null;
+
+      const questionLog = task.status === "completed"
+        ? questionLogForCompletedTask(task)
+        : null;
+      if (questionLog) {
+        await tx
+          .insert(questionLogs)
+          .values(questionLog)
+          .onConflictDoNothing({ target: questionLogs.taskId });
+      } else {
+        await tx
+          .delete(questionLogs)
+          .where(
+            and(
+              eq(questionLogs.taskId, task.id),
+              eq(questionLogs.userId, userId),
+            ),
+          );
+      }
+      return task;
+    });
     if (!updated) return bad("Görev bulunamadı", 404);
     return ok({ task: updated });
   } catch {

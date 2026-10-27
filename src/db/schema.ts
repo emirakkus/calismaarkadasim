@@ -115,6 +115,9 @@ export const questionLogs = pgTable("question_logs", {
   topicId: integer("topic_id").references(() => topics.id, {
     onDelete: "set null",
   }),
+  taskId: integer("task_id").references(() => tasks.id, {
+    onDelete: "cascade",
+  }),
   total: integer("total").notNull().default(0),
   correct: integer("correct").notNull().default(0),
   wrong: integer("wrong").notNull().default(0),
@@ -124,7 +127,9 @@ export const questionLogs = pgTable("question_logs", {
   note: text("note"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  taskIdUnique: uniqueIndex("question_logs_task_id_unique").on(table.taskId),
+}));
 
 // Çalışma oturumları ve süreleri
 export const studySessions = pgTable("study_sessions", {

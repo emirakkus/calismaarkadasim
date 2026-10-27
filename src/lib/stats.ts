@@ -10,10 +10,13 @@ import {
 } from "@/db/schema";
 import { and, eq, gte, lte, sql, asc } from "drizzle-orm";
 import { addDays, weekDates, dayNameTR } from "@/lib/date";
+import { programProgressPercent } from "@/lib/program-progress";
 
 export type ProgramProgress = {
   totalTopics: number;
   completedTopics: number;
+  totalTasks: number;
+  completedTasks: number;
   percent: number;
   perSubject: {
     subjectId: number;
@@ -25,20 +28,29 @@ export type ProgramProgress = {
   }[];
 };
 
-/** Program ilerlemesi: kullanıcının konularının tamamlanma oranı. */
+/** Program ilerlemesi: tamamlanan konu ve ertelenmemiş günlük görevlerin oranı. */
 export async function getProgramProgress(
   userId: number,
 ): Promise<ProgramProgress> {
-  const subs = await db.select().from(subjects).orderBy(asc(subjects.name));
-  const rows = await db
-    .select({
-      subjectId: topics.subjectId,
-      total: sql<number>`count(*)::int`,
-      completed: sql<number>`sum(case when ${topics.status} = 'completed' then 1 else 0 end)::int`,
-    })
-    .from(topics)
-    .where(eq(topics.userId, userId))
-    .groupBy(topics.subjectId);
+  const [subs, rows, taskRows] = await Promise.all([
+    db.select().from(subjects).orderBy(asc(subjects.name)),
+    db
+      .select({
+        subjectId: topics.subjectId,
+        total: sql<number>`count(*)::int`,
+        completed: sql<number>`sum(case when ${topics.status} = 'completed' then 1 else 0 end)::int`,
+      })
+      .from(topics)
+      .where(eq(topics.userId, userId))
+      .groupBy(topics.subjectId),
+    db
+      .select({
+        total: sql<number>`count(*)::int`,
+        completed: sql<number>`count(*) filter (where ${tasks.status} = 'completed')::int`,
+      })
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), sql`${tasks.status} <> 'postponed'`)),
+  ]);
 
   const byId = new Map(rows.map((r) => [r.subjectId, r]));
 
@@ -61,11 +73,20 @@ export async function getProgramProgress(
 
   const totalTopics = perSubject.reduce((a, s) => a + s.total, 0);
   const completedTopics = perSubject.reduce((a, s) => a + s.completed, 0);
+  const totalTasks = taskRows[0]?.total ?? 0;
+  const completedTasks = taskRows[0]?.completed ?? 0;
 
   return {
     totalTopics,
     completedTopics,
-    percent: totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0,
+    totalTasks,
+    completedTasks,
+    percent: programProgressPercent(
+      totalTopics,
+      completedTopics,
+      totalTasks,
+      completedTasks,
+    ),
     perSubject,
   };
 }

@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS "question_logs" (
 	"subject_id" integer,
 	"subject_name" text NOT NULL,
 	"topic_id" integer,
+	"task_id" integer,
 	"total" integer DEFAULT 0 NOT NULL,
 	"correct" integer DEFAULT 0 NOT NULL,
 	"wrong" integer DEFAULT 0 NOT NULL,
@@ -246,6 +247,7 @@ ALTER TABLE "milestones" ADD CONSTRAINT "milestones_goal_id_study_goals_id_fk" F
 ALTER TABLE "question_logs" ADD CONSTRAINT "question_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
 ALTER TABLE "question_logs" ADD CONSTRAINT "question_logs_subject_id_subjects_id_fk" FOREIGN KEY ("subject_id") REFERENCES "public"."subjects"("id") ON DELETE set null ON UPDATE no action;
 ALTER TABLE "question_logs" ADD CONSTRAINT "question_logs_topic_id_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."topics"("id") ON DELETE set null ON UPDATE no action;
+ALTER TABLE "question_logs" ADD CONSTRAINT "question_logs_task_id_tasks_id_fk" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE cascade ON UPDATE no action;
 ALTER TABLE "review_tasks" ADD CONSTRAINT "review_tasks_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
 ALTER TABLE "review_tasks" ADD CONSTRAINT "review_tasks_topic_id_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."topics"("id") ON DELETE cascade ON UPDATE no action;
 ALTER TABLE "settings" ADD CONSTRAINT "settings_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
@@ -267,4 +269,5 @@ ALTER TABLE "wrong_questions" ADD CONSTRAINT "wrong_questions_user_id_users_id_f
 ALTER TABLE "wrong_questions" ADD CONSTRAINT "wrong_questions_subject_id_subjects_id_fk" FOREIGN KEY ("subject_id") REFERENCES "public"."subjects"("id") ON DELETE set null ON UPDATE no action;
 ALTER TABLE "wrong_questions" ADD CONSTRAINT "wrong_questions_topic_id_topics_id_fk" FOREIGN KEY ("topic_id") REFERENCES "public"."topics"("id") ON DELETE set null ON UPDATE no action;
 CREATE UNIQUE INDEX "daily_goals_user_date_idx" ON "daily_goals" USING btree ("user_id","date");
+CREATE UNIQUE INDEX "question_logs_task_id_unique" ON "question_logs" USING btree ("task_id");
 CREATE UNIQUE INDEX "review_topic_stage_idx" ON "review_tasks" USING btree ("topic_id","stage");

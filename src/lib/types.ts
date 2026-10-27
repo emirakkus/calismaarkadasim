@@ -153,10 +153,12 @@ export type QuestionLog = {
   subjectId: number | null;
   subjectName: string;
   topicId: number | null;
+  taskId: number | null;
   total: number;
   correct: number;
   wrong: number;
   blank: number;
+  breakdownAvailable: boolean;
 };
 
 export type StudySession = {
@@ -237,6 +239,8 @@ export type Settings = {
 export type ProgramProgress = {
   totalTopics: number;
   completedTopics: number;
+  totalTasks: number;
+  completedTasks: number;
   percent: number;
   perSubject: {
     subjectId: number;

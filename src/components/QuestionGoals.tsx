@@ -245,7 +245,10 @@ export default function QuestionGoals({
                       <div>
                         <p className="font-medium text-slate-900">{l.subjectName}</p>
                         <p className="text-xs text-slate-500">
-                          {l.total} soru · {l.correct}D / {l.wrong}Y / {l.blank}B
+                          {l.total} soru
+                          {l.breakdownAvailable
+                            ? ` · ${l.correct}D / ${l.wrong}Y / ${l.blank}B`
+                            : " · Dağılım girilmedi"}
                           {acc !== null && ` · %${acc} doğru`}
                         </p>
                       </div>
