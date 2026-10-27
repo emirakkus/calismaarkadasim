@@ -34,10 +34,12 @@ const BAR_COLORS = ["#059669", "#3b82f6", "#8b5cf6"];
 
 export default function Dashboard({
   date,
+  userName,
   onNavigate,
   toast,
 }: {
   date: string;
+  userName: string;
   onNavigate: (tab: string) => void;
   toast: (msg: string, type?: "success" | "error") => void;
 }) {
@@ -106,7 +108,7 @@ export default function Dashboard({
   if (loading || !data) return <Spinner label="Panel yükleniyor..." />;
 
   const s = data.summary;
-  const name = data.settings?.userName?.trim();
+  const name = userName.trim() || data.settings?.userName?.trim();
   const taskPct = s.tasksTotal > 0 ? Math.round((s.tasksCompleted / s.tasksTotal) * 100) : 0;
 
   const weekMinutes = data.week.perDay.map((d) => d.minutes);
