@@ -2,7 +2,10 @@ import { db } from "@/db";
 import { dailyGoals, questionLogs, tasks } from "@/db/schema";
 import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError, asInt, TASK_STATUSES } from "@/lib/api";
-import { questionLogForCompletedTask } from "@/lib/task-question-log";
+import {
+  isValidTaskQuestionBreakdown,
+  questionLogForCompletedTask,
+} from "@/lib/task-question-log";
 import { and, eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +17,26 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { id } = await params;
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
+    const hasQuestionBreakdown =
+      body.correct !== undefined || body.wrong !== undefined;
+    if (hasQuestionBreakdown && body.status !== "completed") {
+      return bad("Soru dağılımı yalnızca görev tamamlanırken gönderilebilir");
+    }
+    const breakdown = hasQuestionBreakdown
+      ? {
+          correct: Number(body.correct),
+          wrong: Number(body.wrong),
+        }
+      : undefined;
+    if (
+      breakdown &&
+      (!Number.isInteger(breakdown.correct) ||
+        !Number.isInteger(breakdown.wrong) ||
+        breakdown.correct < 0 ||
+        breakdown.wrong < 0)
+    ) {
+      return bad("Doğru ve yanlış soru sayıları geçerli, negatif olmayan tam sayılar olmalı");
+    }
     const update: Record<string, unknown> = { updatedAt: new Date() };
     if (body.status !== undefined) {
       if (!TASK_STATUSES.includes(body.status)) return bad("Geçersiz durum");
@@ -35,22 +58,47 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body.isPinned !== undefined) update.isPinned = Boolean(body.isPinned);
     if (body.orderIndex !== undefined) update.orderIndex = asInt(body.orderIndex);
 
-    const updated = await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
+      const [existingTask] = await tx
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
+        .limit(1);
+      if (!existingTask) return { task: null, invalidBreakdown: false };
+      if (
+        breakdown &&
+        !isValidTaskQuestionBreakdown(existingTask.questionGoal, breakdown)
+      ) {
+        return { task: null, invalidBreakdown: true };
+      }
+
       const [task] = await tx
         .update(tasks)
         .set(update)
         .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
         .returning();
-      if (!task) return null;
+      if (!task) return { task: null, invalidBreakdown: false };
 
       const questionLog = task.status === "completed"
-        ? questionLogForCompletedTask(task)
+        ? questionLogForCompletedTask(task, breakdown)
         : null;
       if (questionLog) {
-        await tx
-          .insert(questionLogs)
-          .values(questionLog)
-          .onConflictDoNothing({ target: questionLogs.taskId });
+        const insert = tx.insert(questionLogs).values(questionLog);
+        if (breakdown) {
+          await insert.onConflictDoUpdate({
+            target: questionLogs.taskId,
+            set: {
+              total: questionLog.total,
+              correct: questionLog.correct,
+              wrong: questionLog.wrong,
+              blank: questionLog.blank,
+              breakdownAvailable: true,
+              updatedAt: new Date(),
+            },
+          });
+        } else {
+          await insert.onConflictDoNothing({ target: questionLogs.taskId });
+        }
       } else {
         await tx
           .delete(questionLogs)
@@ -61,10 +109,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             ),
           );
       }
-      return task;
+      return { task, invalidBreakdown: false };
     });
-    if (!updated) return bad("Görev bulunamadı", 404);
-    return ok({ task: updated });
+    if (result.invalidBreakdown) {
+      return bad("Doğru ve yanlış toplamı görev soru hedefini aşamaz");
+    }
+    if (!result.task) return bad("Görev bulunamadı", 404);
+    return ok({ task: result.task });
   } catch {
     return serverError();
   }
