@@ -21,6 +21,7 @@ import Goals from "@/components/Goals";
 import StudyCalendar from "@/components/StudyCalendar";
 import EnergyLog from "@/components/EnergyLog";
 import DataBackup from "@/components/DataBackup";
+import AuthScreen from "@/components/AuthScreen";
 import {
   HomeIcon,
   CalendarIcon,
@@ -92,7 +93,11 @@ const TAB_TITLES: Record<Tab, string> = {
 
 type Toast = { id: number; msg: string; type: "success" | "error" };
 
+type AuthUser = { id: number; email: string; name: string };
+
 export default function Page() {
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [tab, setTab] = useState<Tab>("dashboard");
   const [date, setDate] = useState<string>(todayISO());
   const [day, setDay] = useState<DayResponse | null>(null);
@@ -117,7 +122,18 @@ export default function Page() {
     loadDay(date).catch((e) => toast(e.message, "error"));
   }, [date, loadDay, toast]);
 
+  // Oturum kontrolü (sayfa açılışında / yenilemede)
   useEffect(() => {
+    api<{ user: AuthUser | null }>("/api/auth/me")
+      .then((r) => setAuthUser(r.user))
+      .catch(() => setAuthUser(null))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  // Giriş yapıldığında uygulama verisini yükle
+  useEffect(() => {
+    if (!authUser) return;
+    setLoading(true);
     (async () => {
       try {
         const [sch, set] = await Promise.all([
@@ -134,12 +150,24 @@ export default function Page() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authUser]);
 
   useEffect(() => {
-    if (!loading) loadDay(date).catch((e) => toast(e.message, "error"));
+    if (!loading && authUser) loadDay(date).catch((e) => toast(e.message, "error"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
+
+  async function logout() {
+    try {
+      await api("/api/auth/logout", { method: "POST" });
+    } catch {
+      /* yoksay */
+    }
+    setAuthUser(null);
+    setSettings(null);
+    setDay(null);
+    setTab("dashboard");
+  }
 
   // Hatırlatma zamanlayıcısı
   const reminderRef = useRef<SettingsType | null>(null);
@@ -164,8 +192,20 @@ export default function Page() {
     return () => clearInterval(interval);
   }, []);
 
-  const name = settings?.userName?.trim();
+  const name = settings?.userName?.trim() || authUser?.name?.trim();
   const initial = name ? name[0].toLocaleUpperCase("tr") : "Ç";
+
+  if (!authChecked) {
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <Spinner label="Yükleniyor..." />
+      </div>
+    );
+  }
+
+  if (!authUser) {
+    return <AuthScreen onAuthed={(u) => setAuthUser(u)} />;
+  }
 
   if (loading || !day || !settings) {
     return (
@@ -311,6 +351,15 @@ export default function Page() {
                   {initial}
                 </span>
                 {name && <span className="hidden text-sm font-medium text-slate-700 sm:inline">{name}</span>}
+              </button>
+
+              <button
+                onClick={logout}
+                className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-rose-600"
+                aria-label="Çıkış yap"
+                title="Çıkış yap"
+              >
+                Çıkış
               </button>
             </div>
           </div>

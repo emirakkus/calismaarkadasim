@@ -9,7 +9,27 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-// Dersler
+// Kullanıcılar
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  name: text("name").notNull().default(""),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Oturumlar (httpOnly cookie içindeki token ile eşleşir)
+export const authSessions = pgTable("auth_sessions", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Dersler (haftalık sabit program herkes için ortaktır -> global)
 export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
@@ -32,6 +52,9 @@ export const scheduleSlots = pgTable("schedule_slots", {
 // Konular ve programdaki sıraları (kullanıcı tarafından eklenir)
 export const topics = pgTable("topics", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   subjectId: integer("subject_id")
     .notNull()
     .references(() => subjects.id, { onDelete: "cascade" }),
@@ -48,6 +71,9 @@ export const topics = pgTable("topics", {
 // Günlük çalışma görevleri
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(), // YYYY-MM-DD
   subjectId: integer("subject_id").references(() => subjects.id, {
     onDelete: "set null",
@@ -78,6 +104,9 @@ export const tasks = pgTable("tasks", {
 // Çözülen soru kayıtları (doğru/yanlış/boş kullanıcı tarafından girilir)
 export const questionLogs = pgTable("question_logs", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
   subjectId: integer("subject_id").references(() => subjects.id, {
     onDelete: "set null",
@@ -100,6 +129,9 @@ export const questionLogs = pgTable("question_logs", {
 // Çalışma oturumları ve süreleri
 export const studySessions = pgTable("study_sessions", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
   subjectId: integer("subject_id").references(() => subjects.id, {
     onDelete: "set null",
@@ -125,18 +157,28 @@ export const dailyGoals = pgTable(
   "daily_goals",
   {
     id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     date: date("date").notNull(),
     questionGoal: integer("question_goal").notNull().default(0),
     minutesGoal: integer("minutes_goal").notNull().default(0),
   },
   (table) => ({
-    dateIdx: uniqueIndex("daily_goals_date_idx").on(table.date),
+    userDateIdx: uniqueIndex("daily_goals_user_date_idx").on(
+      table.userId,
+      table.date,
+    ),
   }),
 );
 
-// Uygulama ayarları + hatırlatma tercihleri (tekil kayıt)
+// Uygulama ayarları + hatırlatma tercihleri (kullanıcı başına bir kayıt)
 export const settings = pgTable("settings", {
-  id: integer("id").primaryKey().default(1),
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
   userName: text("user_name").notNull().default(""),
   reminderEnabled: boolean("reminder_enabled").notNull().default(false),
   reminderTime: text("reminder_time").notNull().default("19:00"),
@@ -152,6 +194,9 @@ export const settings = pgTable("settings", {
 // Yapay zekâ koçu etkileşimleri
 export const coachMessages = pgTable("coach_messages", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   // user | assistant
   role: text("role").notNull(),
   content: text("content").notNull(),
@@ -160,7 +205,11 @@ export const coachMessages = pgTable("coach_messages", {
 
 // Sınav ayarı (tekil kayıt)
 export const examSettings = pgTable("exam_settings", {
-  id: integer("id").primaryKey().default(1),
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
   examName: text("exam_name").notNull().default(""),
   examDate: date("exam_date"),
   weakThreshold: integer("weak_threshold").notNull().default(60),
@@ -169,7 +218,11 @@ export const examSettings = pgTable("exam_settings", {
 
 // Çalışma serisi (tekil kayıt, kayıtlardan yeniden hesaplanabilir)
 export const studyStreak = pgTable("study_streak", {
-  id: integer("id").primaryKey().default(1),
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
   currentStreak: integer("current_streak").notNull().default(0),
   longestStreak: integer("longest_streak").notNull().default(0),
   lastStudyDate: date("last_study_date"),
@@ -181,6 +234,9 @@ export const reviewTasks = pgTable(
   "review_tasks",
   {
     id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     topicId: integer("topic_id")
       .notNull()
       .references(() => topics.id, { onDelete: "cascade" }),
@@ -209,6 +265,9 @@ export const reviewTasks = pgTable(
 // Kişisel notlar
 export const studyNotes = pgTable("study_notes", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   subjectId: integer("subject_id").references(() => subjects.id, {
     onDelete: "set null",
   }),
@@ -227,6 +286,9 @@ export const studyNotes = pgTable("study_notes", {
 // Yanlış defteri
 export const wrongQuestions = pgTable("wrong_questions", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   subjectId: integer("subject_id").references(() => subjects.id, {
     onDelete: "set null",
   }),
@@ -255,6 +317,9 @@ export type DailyGoal = typeof dailyGoals.$inferSelect;
 // Hedefler
 export const studyGoals = pgTable("study_goals", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   // questions | topics | minutes | mock | review | custom
@@ -274,6 +339,9 @@ export const studyGoals = pgTable("study_goals", {
 // Kilometre taşları (bir hedefin ara aşamaları)
 export const milestones = pgTable("milestones", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   goalId: integer("goal_id")
     .notNull()
     .references(() => studyGoals.id, { onDelete: "cascade" }),
@@ -288,6 +356,9 @@ export const milestones = pgTable("milestones", {
 // Günlük enerji / motivasyon kayıtları
 export const energyLogs = pgTable("energy_logs", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
   energy: integer("energy").notNull(), // 1-5
   motivation: integer("motivation").notNull(), // 1-5
@@ -305,3 +376,5 @@ export type WrongQuestion = typeof wrongQuestions.$inferSelect;
 export type StudyGoal = typeof studyGoals.$inferSelect;
 export type Milestone = typeof milestones.$inferSelect;
 export type EnergyLog = typeof energyLogs.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type AuthSession = typeof authSessions.$inferSelect;

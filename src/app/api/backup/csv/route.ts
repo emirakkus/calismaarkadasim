@@ -1,8 +1,8 @@
 import { db } from "@/db";
 import { questionLogs } from "@/db/schema";
-import { ensureSeed } from "@/lib/seed";
+import { getUserId, unauthorized } from "@/lib/auth";
 import { serverError } from "@/lib/api";
-import { asc } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +15,13 @@ function csvCell(v: unknown): string {
 /** Soru ve performans kayıtlarını CSV olarak indirir. */
 export async function GET() {
   try {
-    await ensureSeed();
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+
     const rows = await db
       .select()
       .from(questionLogs)
+      .where(eq(questionLogs.userId, userId))
       .orderBy(asc(questionLogs.date), asc(questionLogs.id));
 
     const header = [
@@ -49,7 +52,6 @@ export async function GET() {
       );
     }
 
-    // Excel'in Türkçe karakterleri doğru göstermesi için BOM ekle.
     const body = "\uFEFF" + lines.join("\n");
     const filename = `soru-kayitlari-${new Date().toISOString().slice(0, 10)}.csv`;
     return new Response(body, {

@@ -25,8 +25,10 @@ export type ProgramProgress = {
   }[];
 };
 
-/** Program ilerlemesi: konuların tamamlanma oranı (ders bazında + genel). */
-export async function getProgramProgress(): Promise<ProgramProgress> {
+/** Program ilerlemesi: kullanıcının konularının tamamlanma oranı. */
+export async function getProgramProgress(
+  userId: number,
+): Promise<ProgramProgress> {
   const subs = await db.select().from(subjects).orderBy(asc(subjects.name));
   const rows = await db
     .select({
@@ -35,6 +37,7 @@ export async function getProgramProgress(): Promise<ProgramProgress> {
       completed: sql<number>`sum(case when ${topics.status} = 'completed' then 1 else 0 end)::int`,
     })
     .from(topics)
+    .where(eq(topics.userId, userId))
     .groupBy(topics.subjectId);
 
   const byId = new Map(rows.map((r) => [r.subjectId, r]));
@@ -84,12 +87,13 @@ export type DailySummary = {
 };
 
 export async function getEffectiveGoals(
+  userId: number,
   date: string,
 ): Promise<{ questionGoal: number; minutesGoal: number }> {
   const override = await db
     .select()
     .from(dailyGoals)
-    .where(eq(dailyGoals.date, date))
+    .where(and(eq(dailyGoals.userId, userId), eq(dailyGoals.date, date)))
     .limit(1);
   if (override[0]) {
     return {
@@ -97,14 +101,21 @@ export async function getEffectiveGoals(
       minutesGoal: override[0].minutesGoal,
     };
   }
-  const s = await db.select().from(settings).where(eq(settings.id, 1)).limit(1);
+  const s = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.userId, userId))
+    .limit(1);
   return {
     questionGoal: s[0]?.defaultDailyQuestionGoal ?? 120,
     minutesGoal: s[0]?.defaultDailyMinutesGoal ?? 240,
   };
 }
 
-export async function getDailySummary(date: string): Promise<DailySummary> {
+export async function getDailySummary(
+  userId: number,
+  date: string,
+): Promise<DailySummary> {
   const q = await db
     .select({
       total: sql<number>`coalesce(sum(${questionLogs.total}),0)::int`,
@@ -113,19 +124,19 @@ export async function getDailySummary(date: string): Promise<DailySummary> {
       blank: sql<number>`coalesce(sum(${questionLogs.blank}),0)::int`,
     })
     .from(questionLogs)
-    .where(eq(questionLogs.date, date));
+    .where(and(eq(questionLogs.userId, userId), eq(questionLogs.date, date)));
 
   const m = await db
     .select({
       minutes: sql<number>`coalesce(sum(${studySessions.minutes}),0)::int`,
     })
     .from(studySessions)
-    .where(eq(studySessions.date, date));
+    .where(and(eq(studySessions.userId, userId), eq(studySessions.date, date)));
 
   const t = await db
     .select({ status: tasks.status, count: sql<number>`count(*)::int` })
     .from(tasks)
-    .where(eq(tasks.date, date))
+    .where(and(eq(tasks.userId, userId), eq(tasks.date, date)))
     .groupBy(tasks.status);
 
   const counts = { completed: 0, in_progress: 0, pending: 0, postponed: 0 };
@@ -137,7 +148,7 @@ export async function getDailySummary(date: string): Promise<DailySummary> {
     }
   }
 
-  const goals = await getEffectiveGoals(date);
+  const goals = await getEffectiveGoals(userId, date);
 
   return {
     date,
@@ -188,27 +199,42 @@ export type WeeklyStats = {
   prevWeekMinutes: number;
 };
 
-async function sumQuestions(from: string, to: string) {
+async function sumQuestions(userId: number, from: string, to: string) {
   const r = await db
     .select({
       total: sql<number>`coalesce(sum(${questionLogs.total}),0)::int`,
     })
     .from(questionLogs)
-    .where(and(gte(questionLogs.date, from), lte(questionLogs.date, to)));
+    .where(
+      and(
+        eq(questionLogs.userId, userId),
+        gte(questionLogs.date, from),
+        lte(questionLogs.date, to),
+      ),
+    );
   return r[0]?.total ?? 0;
 }
 
-async function sumMinutes(from: string, to: string) {
+async function sumMinutes(userId: number, from: string, to: string) {
   const r = await db
     .select({
       minutes: sql<number>`coalesce(sum(${studySessions.minutes}),0)::int`,
     })
     .from(studySessions)
-    .where(and(gte(studySessions.date, from), lte(studySessions.date, to)));
+    .where(
+      and(
+        eq(studySessions.userId, userId),
+        gte(studySessions.date, from),
+        lte(studySessions.date, to),
+      ),
+    );
   return r[0]?.minutes ?? 0;
 }
 
-export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
+export async function getWeeklyStats(
+  userId: number,
+  weekStart: string,
+): Promise<WeeklyStats> {
   const dates = weekDates(weekStart);
   const weekEnd = dates[6];
 
@@ -220,13 +246,13 @@ export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
           correct: sql<number>`coalesce(sum(${questionLogs.correct}),0)::int`,
         })
         .from(questionLogs)
-        .where(eq(questionLogs.date, d));
+        .where(and(eq(questionLogs.userId, userId), eq(questionLogs.date, d)));
       const m = await db
         .select({
           minutes: sql<number>`coalesce(sum(${studySessions.minutes}),0)::int`,
         })
         .from(studySessions)
-        .where(eq(studySessions.date, d));
+        .where(and(eq(studySessions.userId, userId), eq(studySessions.date, d)));
       return {
         date: d,
         dayName: dayNameTR(d),
@@ -244,7 +270,11 @@ export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
     })
     .from(studySessions)
     .where(
-      and(gte(studySessions.date, weekStart), lte(studySessions.date, weekEnd)),
+      and(
+        eq(studySessions.userId, userId),
+        gte(studySessions.date, weekStart),
+        lte(studySessions.date, weekEnd),
+      ),
     )
     .groupBy(studySessions.subjectName)
     .orderBy(sql`sum(${studySessions.minutes}) desc`);
@@ -259,7 +289,11 @@ export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
     })
     .from(questionLogs)
     .where(
-      and(gte(questionLogs.date, weekStart), lte(questionLogs.date, weekEnd)),
+      and(
+        eq(questionLogs.userId, userId),
+        gte(questionLogs.date, weekStart),
+        lte(questionLogs.date, weekEnd),
+      ),
     )
     .groupBy(questionLogs.subjectName);
 
@@ -271,7 +305,6 @@ export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
     };
   });
 
-  // En çok zorlanılan dersler: yeterli veri olanlar (en az 10 cevaplanmış)
   const hardestSubjects = perSubjectQuestions
     .filter((s) => s.accuracy !== null)
     .map((s) => ({
@@ -299,7 +332,13 @@ export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
   const taskStats = await db
     .select({ status: tasks.status, count: sql<number>`count(*)::int` })
     .from(tasks)
-    .where(and(gte(tasks.date, weekStart), lte(tasks.date, weekEnd)))
+    .where(
+      and(
+        eq(tasks.userId, userId),
+        gte(tasks.date, weekStart),
+        lte(tasks.date, weekEnd),
+      ),
+    )
     .groupBy(tasks.status);
   let tasksTotal = 0;
   let tasksCompleted = 0;
@@ -310,8 +349,8 @@ export async function getWeeklyStats(weekStart: string): Promise<WeeklyStats> {
 
   const prevStart = addDays(weekStart, -7);
   const prevEnd = addDays(weekStart, -1);
-  const prevWeekQuestions = await sumQuestions(prevStart, prevEnd);
-  const prevWeekMinutes = await sumMinutes(prevStart, prevEnd);
+  const prevWeekQuestions = await sumQuestions(userId, prevStart, prevEnd);
+  const prevWeekMinutes = await sumMinutes(userId, prevStart, prevEnd);
 
   return {
     weekStart,

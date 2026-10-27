@@ -1,25 +1,20 @@
 import { db } from "@/db";
 import { questionLogs, topics, subjects, examSettings } from "@/db/schema";
-import { ensureSeed } from "@/lib/seed";
+import { getUserId, unauthorized } from "@/lib/auth";
+import { ensureUserData } from "@/lib/seed";
 import { ok, serverError } from "@/lib/api";
 import { classifyWeakTopic } from "@/lib/logic";
 import { todayISO } from "@/lib/date";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Konu bazında performans analizi. Soru kayıtlarında konu (topicId) seçilmiş
- * veriler değerlendirilir. Yeterli veri yoksa kesin başarı yargısı verilmez.
- */
 export async function GET() {
   try {
-    await ensureSeed();
-    const [exam] = await db
-      .select()
-      .from(examSettings)
-      .where(eq(examSettings.id, 1))
-      .limit(1);
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+    await ensureUserData(userId);
+    const [exam] = await db.select().from(examSettings).where(eq(examSettings.userId, userId)).limit(1);
     const threshold = exam?.weakThreshold ?? 60;
     const today = todayISO();
 
@@ -32,16 +27,10 @@ export async function GET() {
         lastDate: sql<string | null>`max(${questionLogs.date})`,
       })
       .from(questionLogs)
-      .where(sql`${questionLogs.topicId} is not null`)
+      .where(and(eq(questionLogs.userId, userId), sql`${questionLogs.topicId} is not null`))
       .groupBy(questionLogs.topicId);
 
-    const topicRows = await db
-      .select({
-        id: topics.id,
-        name: topics.name,
-        subjectId: topics.subjectId,
-      })
-      .from(topics);
+    const topicRows = await db.select({ id: topics.id, name: topics.name, subjectId: topics.subjectId }).from(topics).where(eq(topics.userId, userId));
     const topicMap = new Map(topicRows.map((t) => [t.id, t]));
     const subRows = await db.select().from(subjects);
     const subMap = new Map(subRows.map((s) => [s.id, s.name]));
@@ -50,37 +39,19 @@ export async function GET() {
       .filter((r) => r.topicId != null && topicMap.has(r.topicId))
       .map((r) => {
         const topic = topicMap.get(r.topicId as number)!;
-        const result = classifyWeakTopic({
-          solved: r.solved,
-          correct: r.correct,
-          wrong: r.wrong,
-          lastStudyDate: r.lastDate,
-          today,
-          threshold,
-        });
+        const result = classifyWeakTopic({ solved: r.solved, correct: r.correct, wrong: r.wrong, lastStudyDate: r.lastDate, today, threshold });
         return {
           topicId: r.topicId,
           topicName: topic.name,
           subjectName: subMap.get(topic.subjectId) ?? "Genel",
-          solved: r.solved,
-          correct: r.correct,
-          wrong: r.wrong,
-          lastStudyDate: r.lastDate,
+          solved: r.solved, correct: r.correct, wrong: r.wrong, lastStudyDate: r.lastDate,
           ...result,
-          // Önerilen çalışma süresi: zayıflık sinyali sayısına göre kabaca.
           suggestedMinutes: result.isWeak ? 30 + result.reasons.length * 15 : 0,
         };
       });
 
-    const weak = analysis
-      .filter((a) => a.isWeak)
-      .sort((a, b) => {
-        const aa = a.accuracy ?? 101;
-        const ba = b.accuracy ?? 101;
-        return aa - ba;
-      });
+    const weak = analysis.filter((a) => a.isWeak).sort((a, b) => (a.accuracy ?? 101) - (b.accuracy ?? 101));
     const insufficient = analysis.filter((a) => !a.hasEnoughData);
-
     return ok({ threshold, analysis, weak, insufficient });
   } catch {
     return serverError();

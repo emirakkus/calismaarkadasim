@@ -5,7 +5,8 @@ import {
   examSettings,
   reviewTasks,
 } from "@/db/schema";
-import { ensureSeed } from "@/lib/seed";
+import { getUserId, unauthorized } from "@/lib/auth";
+import { ensureUserData } from "@/lib/seed";
 import { ok, bad, serverError, isValidDate } from "@/lib/api";
 import {
   getDailySummary,
@@ -26,7 +27,10 @@ function daysUntil(dateStr: string): number {
 
 export async function GET(req: Request) {
   try {
-    await ensureSeed();
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+    await ensureUserData(userId);
+
     const param = new URL(req.url).searchParams.get("date");
     const date = param && isValidDate(param) ? param : todayISO();
     const ws = startOfWeek(todayISO());
@@ -43,23 +47,24 @@ export async function GET(req: Request) {
       weekActiveDays,
       dueReviews,
     ] = await Promise.all([
-      getDailySummary(date),
-      getWeeklyStats(startOfWeek(date)),
-      getProgramProgress(),
-      db.select().from(settingsTable).where(eq(settingsTable.id, 1)).limit(1),
+      getDailySummary(userId, date),
+      getWeeklyStats(userId, startOfWeek(date)),
+      getProgramProgress(userId),
+      db.select().from(settingsTable).where(eq(settingsTable.userId, userId)).limit(1),
       db
         .select()
         .from(tasks)
-        .where(eq(tasks.date, date))
+        .where(and(eq(tasks.userId, userId), eq(tasks.date, date)))
         .orderBy(asc(tasks.orderIndex), asc(tasks.id)),
-      db.select().from(examSettings).where(eq(examSettings.id, 1)).limit(1),
-      recomputeStreak(),
-      getWeekActiveDays(wd[0], wd[6]),
+      db.select().from(examSettings).where(eq(examSettings.userId, userId)).limit(1),
+      recomputeStreak(userId),
+      getWeekActiveDays(userId, wd[0], wd[6]),
       db
         .select()
         .from(reviewTasks)
         .where(
           and(
+            eq(reviewTasks.userId, userId),
             eq(reviewTasks.status, "pending"),
             lte(reviewTasks.scheduledDate, todayISO()),
           ),
@@ -73,8 +78,7 @@ export async function GET(req: Request) {
       null;
 
     const exam = examRows[0] ?? null;
-    const examDaysLeft =
-      exam?.examDate ? daysUntil(exam.examDate as string) : null;
+    const examDaysLeft = exam?.examDate ? daysUntil(exam.examDate as string) : null;
 
     return ok({
       date,
