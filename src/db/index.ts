@@ -7,6 +7,21 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required");
 }
 
+const parsedDatabaseUrl = new URL(databaseUrl);
+const isLocal =
+  parsedDatabaseUrl.hostname === "localhost" ||
+  parsedDatabaseUrl.hostname === "127.0.0.1" ||
+  parsedDatabaseUrl.hostname === "[::1]";
+const sslMode = parsedDatabaseUrl.searchParams.get("sslmode")?.toLowerCase();
+
+if (
+  !isLocal ||
+  (sslMode !== undefined && sslMode !== "disable") ||
+  process.env.PGSSLMODE === "require"
+) {
+  parsedDatabaseUrl.searchParams.set("sslmode", "verify-full");
+}
+
 const globalForDb = globalThis as typeof globalThis & {
   __arenaNextJsPostgresqlPool?: Pool;
 };
@@ -14,7 +29,8 @@ const globalForDb = globalThis as typeof globalThis & {
 export const pool =
   globalForDb.__arenaNextJsPostgresqlPool ??
   new Pool({
-    connectionString: databaseUrl,
+    connectionString: parsedDatabaseUrl.toString(),
+    max: process.env.VERCEL ? 1 : 10,
   });
 
 if (process.env.NODE_ENV !== "production") {
