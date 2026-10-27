@@ -131,7 +131,13 @@ export async function getDailySummary(
       minutes: sql<number>`coalesce(sum(${studySessions.minutes}),0)::int`,
     })
     .from(studySessions)
-    .where(and(eq(studySessions.userId, userId), eq(studySessions.date, date)));
+    .where(
+      and(
+        eq(studySessions.userId, userId),
+        eq(studySessions.date, date),
+        eq(studySessions.status, "completed"),
+      ),
+    );
 
   const t = await db
     .select({ status: tasks.status, count: sql<number>`count(*)::int` })
@@ -224,6 +230,7 @@ async function sumMinutes(userId: number, from: string, to: string) {
     .where(
       and(
         eq(studySessions.userId, userId),
+        eq(studySessions.status, "completed"),
         gte(studySessions.date, from),
         lte(studySessions.date, to),
       ),
@@ -252,7 +259,13 @@ export async function getWeeklyStats(
           minutes: sql<number>`coalesce(sum(${studySessions.minutes}),0)::int`,
         })
         .from(studySessions)
-        .where(and(eq(studySessions.userId, userId), eq(studySessions.date, d)));
+        .where(
+          and(
+            eq(studySessions.userId, userId),
+            eq(studySessions.date, d),
+            eq(studySessions.status, "completed"),
+          ),
+        );
       return {
         date: d,
         dayName: dayNameTR(d),
@@ -272,6 +285,7 @@ export async function getWeeklyStats(
     .where(
       and(
         eq(studySessions.userId, userId),
+        eq(studySessions.status, "completed"),
         gte(studySessions.date, weekStart),
         lte(studySessions.date, weekEnd),
       ),

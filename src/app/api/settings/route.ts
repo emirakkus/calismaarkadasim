@@ -1,30 +1,53 @@
 import { db } from "@/db";
 import { settings, users } from "@/db/schema";
 import { getUserId, unauthorized } from "@/lib/auth";
-import { ensureUserData } from "@/lib/seed";
 import { ok, bad, serverError, asInt } from "@/lib/api";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+async function getOrCreateSettings(userId: number) {
+  const [user] = await db
+    .select({ name: users.name })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!user) return { user: null, settings: null };
+
+  const [existing] = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.userId, userId))
+    .limit(1);
+  if (existing) return { user, settings: existing };
+
+  const [created] = await db
+    .insert(settings)
+    .values({ userId, userName: user.name })
+    .onConflictDoNothing({ target: settings.userId })
+    .returning();
+  if (created) return { user, settings: created };
+
+  const [raced] = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.userId, userId))
+    .limit(1);
+  return { user, settings: raced ?? null };
+}
+
 export async function GET() {
   try {
     const userId = await getUserId();
     if (!userId) return unauthorized();
-    await ensureUserData(userId);
-    const [row] = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.userId, userId))
-      .limit(1);
-    if (!row) return serverError("Kullanıcı ayarları bulunamadı");
-    const [user] = await db
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-    return ok({ settings: { ...row, userName: user?.name ?? row.userName } });
-  } catch {
+    const result = await getOrCreateSettings(userId);
+    if (!result.user) return unauthorized();
+    if (!result.settings) return serverError("Kullanıcı ayarları bulunamadı");
+    return ok({
+      settings: { ...result.settings, userName: result.user.name ?? result.settings.userName },
+    });
+  } catch (error) {
+    console.error("[settings] GET failed", error);
     return serverError();
   }
 }
@@ -33,18 +56,15 @@ export async function PUT(req: Request) {
   try {
     const userId = await getUserId();
     if (!userId) return unauthorized();
-    await ensureUserData(userId);
+    const result = await getOrCreateSettings(userId);
+    if (!result.user) return unauthorized();
+    if (!result.settings) return serverError("Kullanıcı ayarları bulunamadı");
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
 
-    const [user] = await db
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
     const userName =
       body.userName === undefined
-        ? user?.name ?? ""
+        ? result.user.name ?? ""
         : String(body.userName).trim().slice(0, 40);
 
     const update: Record<string, unknown> = {
@@ -76,7 +96,8 @@ export async function PUT(req: Request) {
       return updatedSettings;
     });
     return ok({ settings: row });
-  } catch {
+  } catch (error) {
+    console.error("[settings] PUT failed", error);
     return serverError();
   }
 }

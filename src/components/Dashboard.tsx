@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { OverviewResponse, Task } from "@/lib/types";
 import { Card, CircularProgress, StatCard, StatusBadge, Button, EmptyState, Spinner } from "@/components/ui";
 import { api, formatMinutes } from "@/lib/client";
+import { formatShortTR } from "@/lib/date";
 import {
   BookIcon,
   CalendarIcon,
@@ -208,16 +209,23 @@ export default function Dashboard({
           </div>
         </Card>
 
-        <StatCard
-          icon={<QuestionIcon />}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
-          title="Çözülen sorular"
-          value={`${s.questionsTotal} / ${s.questionGoal}`}
-          barValue={s.questionsTotal}
-          barGoal={s.questionGoal}
-          barColor="#3b82f6"
-        />
+        <button
+          type="button"
+          onClick={() => onNavigate("questions")}
+          aria-label="Soru hedeflerine git ve soru kaydı ekle"
+          className="w-full rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <StatCard
+            icon={<QuestionIcon />}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-600"
+            title="Çözülen sorular"
+            value={`${s.questionsTotal} / ${s.questionGoal}`}
+            barValue={s.questionsTotal}
+            barGoal={s.questionGoal}
+            barColor="#3b82f6"
+          />
+        </button>
         <StatCard
           icon={<ClockIcon />}
           iconBg="bg-violet-50"
@@ -378,7 +386,7 @@ export default function Dashboard({
               Haftalık çalışma
             </h2>
             <span className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-500">
-              Bu hafta
+              {formatShortTR(data.week.weekStart)} – {formatShortTR(data.week.weekEnd)}
             </span>
           </div>
           <div className="flex gap-2">
@@ -389,12 +397,15 @@ export default function Dashboard({
             </div>
             <div className="flex flex-1 items-end justify-between gap-2" style={{ height: 160 }}>
               {data.week.perDay.map((d) => (
-                <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
+                <div key={d.date} className="flex h-full flex-1 flex-col items-center gap-1">
                   <div className="flex w-full flex-1 items-end">
                     <div
                       className="mx-auto w-7 rounded-t-lg bg-emerald-500/90 transition-all sm:w-10"
-                      style={{ height: `${Math.max(2, (d.minutes / maxMin) * 100)}%` }}
+                      style={{
+                        height: `${d.minutes > 0 ? Math.max(2, (d.minutes / maxMin) * 100) : 0}%`,
+                      }}
                       title={formatMinutes(d.minutes)}
+                      aria-label={`${d.dayName}: ${formatMinutes(d.minutes)} çalışma`}
                     />
                   </div>
                   <span className="text-[11px] text-slate-400">{d.dayName.slice(0, 3)}</span>

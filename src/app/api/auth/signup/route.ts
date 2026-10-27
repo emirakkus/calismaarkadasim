@@ -1,17 +1,18 @@
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { examSettings, settings, studyStreak, users } from "@/db/schema";
 import { ok, bad, serverError } from "@/lib/api";
 import {
   hashPassword,
   createSession,
   isValidEmail,
 } from "@/lib/auth";
-import { ensureUserData } from "@/lib/seed";
+import { DEFAULT_EXAM_DATE, ensureGlobalSeed } from "@/lib/seed";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  let createdUserId: number | undefined;
   try {
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
@@ -30,19 +31,38 @@ export async function POST(req: Request) {
       .limit(1);
     if (existing[0]) return bad("Bu e-posta ile zaten bir hesap var", 409);
 
-    const [user] = await db
-      .insert(users)
-      .values({ email, passwordHash: hashPassword(password), name })
-      .returning();
+    await ensureGlobalSeed();
 
-    await ensureUserData(user.id, name);
+    const user = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(users)
+        .values({ email, passwordHash: hashPassword(password), name })
+        .returning();
+      await tx.insert(settings).values({ userId: created.id, userName: name });
+      await tx.insert(examSettings).values({
+        userId: created.id,
+        examName: "YKS",
+        examDate: DEFAULT_EXAM_DATE,
+      });
+      await tx.insert(studyStreak).values({ userId: created.id });
+      return created;
+    });
+    createdUserId = user.id;
     await createSession(user.id);
 
     return ok(
       { user: { id: user.id, email: user.email, name: user.name } },
       { status: 201 },
     );
-  } catch {
+  } catch (error) {
+    console.error("[auth/signup] Registration failed", error);
+    if (createdUserId !== undefined) {
+      try {
+        await db.delete(users).where(eq(users.id, createdUserId));
+      } catch (cleanupError) {
+        console.error("[auth/signup] Failed to roll back created user", cleanupError);
+      }
+    }
     return serverError();
   }
 }
