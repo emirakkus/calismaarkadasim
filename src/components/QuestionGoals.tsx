@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { DayResponse, Subject, QuestionLog, Topic } from "@/lib/types";
 import { Card, Button, EmptyState, SectionTitle, Stat } from "@/components/ui";
 import { api } from "@/lib/client";
+import { summarizeQuestionLogs } from "@/lib/question-log-summary";
 
 function accuracyOf(l: { correct: number; wrong: number }): number | null {
   const graded = l.correct + l.wrong;
@@ -59,7 +60,14 @@ export default function QuestionGoals({
     }
   }
 
-  const s = day.summary;
+  const questionSummary = summarizeQuestionLogs(day.questionLogs);
+  const s = {
+    ...day.summary,
+    questionsTotal: questionSummary.total,
+    questionsCorrect: questionSummary.correct,
+    questionsWrong: questionSummary.wrong,
+    questionsBlank: questionSummary.blank,
+  };
 
   const add = () =>
     run(async () => {
