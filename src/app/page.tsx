@@ -104,6 +104,8 @@ export default function Page() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -134,23 +136,36 @@ export default function Page() {
   useEffect(() => {
     if (!authUser) return;
     setLoading(true);
+    setLoadError("");
     (async () => {
       try {
         const [sch, set] = await Promise.all([
-          api<{ subjects: Subject[] }>("/api/schedule"),
-          api<{ settings: SettingsType }>("/api/settings"),
+          api<{ subjects: Subject[] }>("/api/schedule").catch((error: unknown) => {
+            throw new Error(
+              `Ders programı yüklenemedi: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
+            );
+          }),
+          api<{ settings: SettingsType }>("/api/settings").catch((error: unknown) => {
+            throw new Error(
+              `Ayarlar yüklenemedi: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
+            );
+          }),
         ]);
         setSubjects(sch.subjects);
         setSettings(set.settings);
-        await loadDay(date);
+        await loadDay(date).catch((error: unknown) => {
+          throw new Error(
+            `Günlük plan yüklenemedi: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
+          );
+        });
       } catch (e) {
-        toast(e instanceof Error ? e.message : "Yükleme hatası", "error");
+        setLoadError(e instanceof Error ? e.message : "Veriler yüklenemedi");
       } finally {
         setLoading(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser]);
+  }, [authUser, loadAttempt]);
 
   useEffect(() => {
     if (!loading && authUser) loadDay(date).catch((e) => toast(e.message, "error"));
@@ -166,6 +181,7 @@ export default function Page() {
     setAuthUser(null);
     setSettings(null);
     setDay(null);
+    setLoadError("");
     setTab("dashboard");
   }
 
@@ -182,7 +198,8 @@ export default function Page() {
       const hh = String(now.getHours()).padStart(2, "0");
       const mm = String(now.getMinutes()).padStart(2, "0");
       if (`${hh}:${mm}` !== s.reminderTime) return;
-      const key = "cya-reminder-" + todayISO();
+      if (!authUser) return;
+      const key = `cya-reminder-${authUser.id}-${todayISO()}`;
       if (localStorage.getItem(key)) return;
       localStorage.setItem(key, "1");
       new Notification("Çalışma Yol Arkadaşım", {
@@ -190,9 +207,9 @@ export default function Page() {
       });
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [authUser?.id]);
 
-  const name = settings?.userName?.trim() || authUser?.name?.trim();
+  const name = authUser?.name?.trim() || settings?.userName?.trim();
   const initial = name ? name[0].toLocaleUpperCase("tr") : "Ç";
 
   if (!authChecked) {
@@ -205,6 +222,38 @@ export default function Page() {
 
   if (!authUser) {
     return <AuthScreen onAuthed={(u) => setAuthUser(u)} />;
+  }
+
+  if (loadError) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-slate-50 p-6">
+        <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white p-6 text-center shadow-sm">
+          <h1 className="text-lg font-semibold text-slate-900">
+            Uygulama verileri yüklenemedi
+          </h1>
+          <p role="alert" className="mt-3 text-sm text-rose-700">
+            {loadError}
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              onClick={() => {
+                setLoading(true);
+                setLoadAttempt((attempt) => attempt + 1);
+              }}
+              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Tekrar dene
+            </button>
+            <button
+              onClick={logout}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Çıkış yap
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (loading || !day || !settings) {
@@ -367,7 +416,12 @@ export default function Page() {
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
           {tab === "dashboard" && (
-            <Dashboard date={date} onNavigate={navigate} toast={toast} />
+            <Dashboard
+              date={date}
+              userName={authUser.name}
+              onNavigate={navigate}
+              toast={toast}
+            />
           )}
           {tab === "plan" && (
             <DailyPlan day={day} date={date} subjects={subjects} onRefresh={refresh} toast={toast} />
@@ -376,7 +430,14 @@ export default function Page() {
             <QuestionGoals day={day} date={date} subjects={subjects} onRefresh={refresh} toast={toast} />
           )}
           {tab === "subjects" && <SubjectsTopics toast={toast} />}
-          {tab === "pomodoro" && <Pomodoro subjects={subjects} toast={toast} />}
+          {tab === "pomodoro" && (
+            <Pomodoro
+              key={authUser.id}
+              userId={authUser.id}
+              subjects={subjects}
+              toast={toast}
+            />
+          )}
           {tab === "reviews" && <ReviewCenter toast={toast} />}
           {tab === "notes" && <Notes subjects={subjects} toast={toast} />}
           {tab === "goals" && <Goals toast={toast} />}
@@ -394,7 +455,16 @@ export default function Page() {
             <Reminders settings={settings} onUpdated={setSettings} toast={toast} />
           )}
           {tab === "settings" && (
-            <SettingsPanel settings={settings} onUpdated={setSettings} toast={toast} />
+            <SettingsPanel
+              settings={settings}
+              onUpdated={(updatedSettings) => {
+                setSettings(updatedSettings);
+                setAuthUser((user) =>
+                  user ? { ...user, name: updatedSettings.userName } : user,
+                );
+              }}
+              toast={toast}
+            />
           )}
         </main>
       </div>

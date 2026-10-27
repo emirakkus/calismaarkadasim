@@ -20,20 +20,18 @@ type PersistState = {
   breakMin: number;
 };
 
-const KEY = "cya-pomodoro-v1";
-
-function load(): PersistState | null {
+function load(key: string): PersistState | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as PersistState) : null;
   } catch {
     return null;
   }
 }
 
-function save(s: PersistState) {
-  localStorage.setItem(KEY, JSON.stringify(s));
+function save(key: string, s: PersistState) {
+  localStorage.setItem(key, JSON.stringify(s));
 }
 
 function fmt(ms: number): string {
@@ -44,9 +42,11 @@ function fmt(ms: number): string {
 }
 
 export default function Pomodoro({
+  userId,
   subjects,
   toast,
 }: {
+  userId: number;
   subjects: Subject[];
   toast: (msg: string, type?: "success" | "error") => void;
 }) {
@@ -60,21 +60,7 @@ export default function Pomodoro({
   const [now, setNow] = useState(Date.now());
   const [todayStats, setTodayStats] = useState({ minutes: 0, count: 0 });
   const savedSessionRef = useRef(false);
-
-  // İlk yükleme: kaydı geri yükle
-  useEffect(() => {
-    const s = load();
-    if (s) {
-      setMode(s.mode);
-      setPhase(s.phase);
-      setEndAt(s.endAt);
-      setRemainingMs(s.remainingMs);
-      setFocusMin(s.focusMin);
-      setBreakMin(s.breakMin);
-      setSubjectId(s.subjectId);
-    }
-    refreshStats();
-  }, []);
+  const storageKey = `cya-pomodoro-v2-user-${userId}`;
 
   const refreshStats = useCallback(() => {
     api<{ pomodoroMinutes: number; pomodoroCount: number }>(
@@ -85,6 +71,20 @@ export default function Pomodoro({
       )
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const s = load(storageKey);
+    if (s) {
+      setMode(s.mode);
+      setPhase(s.phase);
+      setEndAt(s.endAt);
+      setRemainingMs(s.remainingMs);
+      setFocusMin(s.focusMin);
+      setBreakMin(s.breakMin);
+      setSubjectId(s.subjectId);
+    }
+    refreshStats();
+  }, [storageKey, refreshStats]);
 
   // Her saniye "now" güncelle (yalnızca gösterim için)
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function Pomodoro({
 
   const persist = useCallback(
     (over: Partial<PersistState>) => {
-      save({
+      save(storageKey, {
         mode,
         phase,
         endAt,
@@ -108,7 +108,7 @@ export default function Pomodoro({
         ...over,
       });
     },
-    [mode, phase, endAt, remainingMs, subjectId, focusMin, breakMin],
+    [storageKey, mode, phase, endAt, remainingMs, subjectId, focusMin, breakMin],
   );
 
   const saveFocusSession = useCallback(
