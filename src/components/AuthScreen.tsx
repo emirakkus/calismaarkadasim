@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import studentImage from "@/images/images.jpg";
 import { api } from "@/lib/client";
 import {
   BookIcon,
@@ -124,7 +125,7 @@ export default function AuthScreen({
 
           <div className="relative mb-6 overflow-hidden rounded-2xl">
             <Image
-              src="/images/study-illustration.png"
+              src={studentImage}
               alt="Çalışan öğrenci illüstrasyonu"
               width={760}
               height={520}
