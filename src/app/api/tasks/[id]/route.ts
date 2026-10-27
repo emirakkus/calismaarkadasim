@@ -1,9 +1,9 @@
 import { db } from "@/db";
-import { questionLogs, tasks } from "@/db/schema";
+import { dailyGoals, questionLogs, tasks } from "@/db/schema";
 import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError, asInt, TASK_STATUSES } from "@/lib/api";
 import { questionLogForCompletedTask } from "@/lib/task-question-log";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +75,28 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const userId = await getUserId();
     if (!userId) return unauthorized();
     const { id } = await params;
-    const [deleted] = await db.delete(tasks).where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId))).returning();
+    const deleted = await db.transaction(async (tx) => {
+      const [task] = await tx
+        .delete(tasks)
+        .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
+        .returning();
+      if (!task) return null;
+
+      if (task.questionGoal > 0) {
+        await tx
+          .update(dailyGoals)
+          .set({
+            questionGoal: sql`greatest(${dailyGoals.questionGoal} - ${task.questionGoal}, 0)`,
+          })
+          .where(
+            and(
+              eq(dailyGoals.userId, userId),
+              eq(dailyGoals.date, task.date),
+            ),
+          );
+      }
+      return task;
+    });
     if (!deleted) return bad("Görev bulunamadı", 404);
     return ok({ ok: true });
   } catch {
