@@ -17,7 +17,6 @@ export default function Stats({
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     api<WeeklyStats>(`/api/stats?weekStart=${weekStart}`)
       .then((d) => active && setData(d))
       .catch((e) => active && toast(e.message, "error"))
@@ -98,12 +97,13 @@ export default function Stats({
             <SectionTitle>Günlük soru çözümü</SectionTitle>
             <div className="flex items-end justify-between gap-2" style={{ height: 160 }}>
               {data.perDay.map((d) => (
-                <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
+                <div key={d.date} className="flex h-full flex-1 flex-col items-center gap-1">
                   <div className="flex w-full flex-1 items-end">
                     <div
                       className="mx-auto w-7 rounded-t-md bg-blue-500 transition-all sm:w-9"
                       style={{ height: `${(d.questions / maxQ) * 100}%` }}
                       title={`${d.questions} soru`}
+                      aria-label={`${d.dayName}: ${d.questions} soru`}
                     />
                   </div>
                   <span className="text-xs font-medium text-slate-700">{d.questions}</span>

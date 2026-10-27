@@ -7,9 +7,10 @@ import {
   studyStreak,
 } from "@/db/schema";
 import { buildTimetable, distinctSubjects } from "@/lib/timetable";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 let globalSeeded = false;
+export const DEFAULT_EXAM_DATE = "2027-06-19";
 
 /**
  * Global (tüm kullanıcılar için ortak) veri: dersler ve haftalık ders programı.
@@ -63,7 +64,21 @@ export async function ensureUserData(
     .where(eq(examSettings.userId, userId))
     .limit(1);
   if (!e[0]) {
-    await db.insert(examSettings).values({ userId }).onConflictDoNothing();
+    await db
+      .insert(examSettings)
+      .values({ userId, examName: "YKS", examDate: DEFAULT_EXAM_DATE })
+      .onConflictDoNothing();
+  } else {
+    await db
+      .update(examSettings)
+      .set({ examName: "YKS", examDate: DEFAULT_EXAM_DATE })
+      .where(
+        and(
+          eq(examSettings.userId, userId),
+          eq(examSettings.examName, ""),
+          isNull(examSettings.examDate),
+        ),
+      );
   }
 
   const st = await db

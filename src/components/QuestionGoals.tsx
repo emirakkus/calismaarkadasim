@@ -36,13 +36,14 @@ export default function QuestionGoals({
   });
 
   useEffect(() => {
-    if (!form.subjectId) {
-      setTopics([]);
-      return;
-    }
+    if (!form.subjectId) return;
+    let active = true;
     api<{ topics: Topic[] }>(`/api/topics?subjectId=${form.subjectId}`)
-      .then((r) => setTopics(r.topics))
-      .catch(() => setTopics([]));
+      .then((r) => active && setTopics(r.topics))
+      .catch(() => active && setTopics([]));
+    return () => {
+      active = false;
+    };
   }, [form.subjectId]);
   const [editing, setEditing] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ total: "", correct: "", wrong: "", blank: "" });
@@ -156,8 +157,12 @@ export default function QuestionGoals({
             <span className="mb-1 block text-slate-600">Ders</span>
             <select
               value={form.subjectId}
-              onChange={(e) => setForm({ ...form, subjectId: e.target.value, topicId: "" })}
+              onChange={(e) => {
+                setTopics([]);
+                setForm({ ...form, subjectId: e.target.value, topicId: "" });
+              }}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              autoFocus
             >
               <option value="">Ders seçin</option>
               {subjects.map((s) => (
