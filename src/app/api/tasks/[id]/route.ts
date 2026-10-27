@@ -127,9 +127,24 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     if (!userId) return unauthorized();
     const { id } = await params;
     const deleted = await db.transaction(async (tx) => {
+      const [existingTask] = await tx
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
+        .limit(1);
+      if (!existingTask) return null;
+
+      await tx
+        .delete(questionLogs)
+        .where(
+          and(
+            eq(questionLogs.taskId, existingTask.id),
+            eq(questionLogs.userId, userId),
+          ),
+        );
       const [task] = await tx
         .delete(tasks)
-        .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
+        .where(and(eq(tasks.id, existingTask.id), eq(tasks.userId, userId)))
         .returning();
       if (!task) return null;
 

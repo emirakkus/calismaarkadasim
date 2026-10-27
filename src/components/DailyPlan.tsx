@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { DayResponse, Subject, TaskStatus, Task } from "@/lib/types";
+import { useRef, useState } from "react";
+import type { DayResponse, Subject, TaskStatus, Task, Topic } from "@/lib/types";
 import { Card, Button, StatusBadge, EmptyState, SectionTitle } from "@/components/ui";
 import { api, formatMinutes } from "@/lib/client";
 
@@ -23,8 +23,12 @@ export default function DailyPlan({
   const [completionTask, setCompletionTask] = useState<Task | null>(null);
   const [correctCount, setCorrectCount] = useState("");
   const [wrongCount, setWrongCount] = useState("");
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [topicsLoading, setTopicsLoading] = useState(false);
+  const topicsRequest = useRef(0);
   const [form, setForm] = useState({
     subjectId: "",
+    topicId: "",
     title: "",
     estimatedMinutes: "40",
     questionGoal: "0",
@@ -43,6 +47,30 @@ export default function DailyPlan({
       toast(e instanceof Error ? e.message : "Hata oluştu", "error");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function selectSubject(subjectId: string) {
+    const requestId = ++topicsRequest.current;
+    setForm((current) => ({ ...current, subjectId, topicId: "" }));
+    setTopics([]);
+    if (!subjectId) {
+      setTopicsLoading(false);
+      return;
+    }
+
+    setTopicsLoading(true);
+    try {
+      const result = await api<{ topics: Topic[] }>(
+        `/api/topics?subjectId=${encodeURIComponent(subjectId)}`,
+      );
+      if (requestId === topicsRequest.current) setTopics(result.topics);
+    } catch (error) {
+      if (requestId === topicsRequest.current) {
+        toast(error instanceof Error ? error.message : "Konular yüklenemedi", "error");
+      }
+    } finally {
+      if (requestId === topicsRequest.current) setTopicsLoading(false);
     }
   }
 
@@ -75,12 +103,14 @@ export default function DailyPlan({
           subjectName: form.subjectId
             ? subjects.find((s) => String(s.id) === form.subjectId)?.name
             : "Genel",
+          topicId: form.topicId || undefined,
           title: form.title.trim(),
           estimatedMinutes: Number(form.estimatedMinutes) || 0,
           questionGoal: Number(form.questionGoal) || 0,
         }),
       });
-      setForm({ subjectId: "", title: "", estimatedMinutes: "40", questionGoal: "0" });
+      setForm({ subjectId: "", topicId: "", title: "", estimatedMinutes: "40", questionGoal: "0" });
+      setTopics([]);
       setShowAdd(false);
       toast("Görev eklendi", "success");
       onRefresh();
@@ -335,7 +365,7 @@ export default function DailyPlan({
               <span className="mb-1 block text-slate-600">Ders</span>
               <select
                 value={form.subjectId}
-                onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+                onChange={(e) => void selectSubject(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="">Genel</option>
@@ -346,6 +376,30 @@ export default function DailyPlan({
                 ))}
               </select>
             </label>
+            {form.subjectId && (
+              <label className="text-sm">
+                <span className="mb-1 block text-slate-600">Konu (isteğe bağlı)</span>
+                <select
+                  value={form.topicId}
+                  onChange={(e) => setForm({ ...form, topicId: e.target.value })}
+                  disabled={topicsLoading}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
+                >
+                  <option value="">
+                    {topicsLoading
+                      ? "Konular yükleniyor..."
+                      : topics.length > 0
+                        ? "Konu seçin"
+                        : "Bu ders için konu yok"}
+                  </option>
+                  {topics.map((topic) => (
+                    <option key={topic.id} value={topic.id}>
+                      {topic.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label className="text-sm">
               <span className="mb-1 block text-slate-600">Görev başlığı</span>
               <input

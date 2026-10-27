@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { tasks } from "@/db/schema";
+import { questionLogs, tasks } from "@/db/schema";
 import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError, asInt, isValidDate } from "@/lib/api";
 import { getEffectiveGoals } from "@/lib/stats";
@@ -24,14 +24,32 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const overloaded = goals.minutesGoal > 0 && projected > goals.minutesGoal;
     const maxOrder = await db.select({ m: sql<number>`coalesce(max(${tasks.orderIndex}),0)::int` }).from(tasks).where(and(eq(tasks.userId, userId), eq(tasks.date, targetDate)));
 
-    await db.update(tasks).set({ status: "postponed", updatedAt: new Date() }).where(and(eq(tasks.id, task.id), eq(tasks.userId, userId)));
+    const moved = await db.transaction(async (tx) => {
+      const [postponed] = await tx
+        .update(tasks)
+        .set({ status: "postponed", completedAt: null, updatedAt: new Date() })
+        .where(and(eq(tasks.id, task.id), eq(tasks.userId, userId)))
+        .returning({ id: tasks.id });
+      if (!postponed) return null;
 
-    const [moved] = await db.insert(tasks).values({
-      userId, date: targetDate, subjectId: task.subjectId, subjectName: task.subjectName,
-      topicId: task.topicId, title: task.title, estimatedMinutes: task.estimatedMinutes,
-      questionGoal: task.questionGoal, status: "pending", notes: task.notes,
-      orderIndex: (maxOrder[0]?.m ?? 0) + 1, source: "manual",
-    }).returning();
+      await tx
+        .delete(questionLogs)
+        .where(
+          and(
+            eq(questionLogs.taskId, task.id),
+            eq(questionLogs.userId, userId),
+          ),
+        );
+
+      const [created] = await tx.insert(tasks).values({
+        userId, date: targetDate, subjectId: task.subjectId, subjectName: task.subjectName,
+        topicId: task.topicId, title: task.title, estimatedMinutes: task.estimatedMinutes,
+        questionGoal: task.questionGoal, status: "pending", notes: task.notes,
+        orderIndex: (maxOrder[0]?.m ?? 0) + 1, source: "manual",
+      }).returning();
+      return created;
+    });
+    if (!moved) return bad("Görev taşınamadı", 404);
 
     const warning = overloaded ? `${targetDate} günü planlanan süre (${projected} dk) günlük hedefi (${goals.minutesGoal} dk) aşıyor. Görevi başka bir güne dağıtmayı düşünebilirsin.` : null;
     return ok({ moved, targetDate, overloaded, warning });
