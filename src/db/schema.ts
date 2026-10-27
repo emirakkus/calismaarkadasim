@@ -193,6 +193,7 @@ export const settings = pgTable("settings", {
   defaultDailyMinutesGoal: integer("default_daily_minutes_goal")
     .notNull()
     .default(240),
+  curriculumVersion: integer("curriculum_version").notNull().default(0),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
