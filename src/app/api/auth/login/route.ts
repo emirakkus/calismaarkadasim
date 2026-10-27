@@ -27,7 +27,11 @@ export async function POST(req: Request) {
     await ensureUserData(user.id, user.name);
     await createSession(user.id);
     return ok({ user: { id: user.id, email: user.email, name: user.name } });
-  } catch {
+  } catch (error) {
+    console.error(
+      "[auth/login] Login failed",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return serverError();
   }
 }
