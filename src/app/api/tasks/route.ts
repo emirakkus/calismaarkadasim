@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { tasks, subjects } from "@/db/schema";
+import { tasks, subjects, topics } from "@/db/schema";
 import { getUserId, unauthorized } from "@/lib/auth";
 import { ensureUserData } from "@/lib/seed";
 import { ok, bad, serverError, asInt, isValidDate } from "@/lib/api";
@@ -26,6 +26,24 @@ export async function POST(req: Request) {
       if (s[0]) { subjectId = s[0].id; subjectName = s[0].name; }
     }
     if (!subjectName) subjectName = "Genel";
+    let topicId: number | null = null;
+    if (body.topicId !== undefined && body.topicId !== null && body.topicId !== "") {
+      if (subjectId === null) return bad("Konu seçmek için ders seçin");
+      const [topic] = await db
+        .select({ id: topics.id, subjectId: topics.subjectId })
+        .from(topics)
+        .where(
+          and(
+            eq(topics.id, asInt(body.topicId)),
+            eq(topics.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!topic || topic.subjectId !== subjectId) {
+        return bad("Seçilen konu bu derse ait değil");
+      }
+      topicId = topic.id;
+    }
 
     const estimatedMinutes = Math.max(0, asInt(body.estimatedMinutes, 40));
     const questionGoal = Math.max(0, asInt(body.questionGoal, 0));
@@ -33,7 +51,7 @@ export async function POST(req: Request) {
 
     const [created] = await db.insert(tasks).values({
       userId, date, subjectId, subjectName,
-      topicId: body.topicId ? asInt(body.topicId) : null,
+      topicId,
       title, estimatedMinutes, questionGoal, status: "pending",
       notes: body.notes ? String(body.notes) : null,
       orderIndex: (maxOrder[0]?.m ?? 0) + 1, source: "manual",
