@@ -5,34 +5,15 @@ import type { Subject } from "@/lib/types";
 import { Card, Button, SectionTitle, Stat } from "@/components/ui";
 import { api, formatMinutes } from "@/lib/client";
 import { todayISO } from "@/lib/date";
+import {
+  getPomodoroState,
+  setPomodoroState,
+  type PomodoroState,
+} from "@/lib/pomodoro-state";
 import { TimerIcon } from "@/components/icons";
 
 type Mode = "focus" | "break";
 type Phase = "idle" | "running" | "paused";
-
-type PersistState = {
-  mode: Mode;
-  phase: Phase;
-  endAt: number | null; // ms epoch
-  remainingMs: number; // paused iken kalan
-  subjectId: string;
-  focusMin: number;
-  breakMin: number;
-};
-
-function load(key: string): PersistState | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as PersistState) : null;
-  } catch {
-    return null;
-  }
-}
-
-function save(key: string, s: PersistState) {
-  localStorage.setItem(key, JSON.stringify(s));
-}
 
 function fmt(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000));
@@ -50,17 +31,19 @@ export default function Pomodoro({
   subjects: Subject[];
   toast: (msg: string, type?: "success" | "error") => void;
 }) {
-  const [mode, setMode] = useState<Mode>("focus");
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [endAt, setEndAt] = useState<number | null>(null);
-  const [remainingMs, setRemainingMs] = useState(25 * 60 * 1000);
-  const [focusMin, setFocusMin] = useState(25);
-  const [breakMin, setBreakMin] = useState(5);
-  const [subjectId, setSubjectId] = useState("");
-  const [now, setNow] = useState(Date.now());
+  const [cachedState] = useState(() => getPomodoroState(userId));
+  const [mode, setMode] = useState<Mode>(cachedState?.mode ?? "focus");
+  const [phase, setPhase] = useState<Phase>(cachedState?.phase ?? "idle");
+  const [endAt, setEndAt] = useState<number | null>(cachedState?.endAt ?? null);
+  const [remainingMs, setRemainingMs] = useState(
+    cachedState?.remainingMs ?? 25 * 60 * 1000,
+  );
+  const [focusMin, setFocusMin] = useState(cachedState?.focusMin ?? 25);
+  const [breakMin, setBreakMin] = useState(cachedState?.breakMin ?? 5);
+  const [subjectId, setSubjectId] = useState(cachedState?.subjectId ?? "");
+  const [now, setNow] = useState(0);
   const [todayStats, setTodayStats] = useState({ minutes: 0, count: 0 });
   const savedSessionRef = useRef(false);
-  const storageKey = `cya-pomodoro-v2-user-${userId}`;
 
   const refreshStats = useCallback(() => {
     api<{ pomodoroMinutes: number; pomodoroCount: number }>(
@@ -73,31 +56,25 @@ export default function Pomodoro({
   }, []);
 
   useEffect(() => {
-    const s = load(storageKey);
-    if (s) {
-      setMode(s.mode);
-      setPhase(s.phase);
-      setEndAt(s.endAt);
-      setRemainingMs(s.remainingMs);
-      setFocusMin(s.focusMin);
-      setBreakMin(s.breakMin);
-      setSubjectId(s.subjectId);
-    }
     refreshStats();
-  }, [storageKey, refreshStats]);
+  }, [refreshStats]);
 
   // Her saniye "now" güncelle (yalnızca gösterim için)
   useEffect(() => {
+    const initialTick = setTimeout(() => setNow(Date.now()), 0);
     const t = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(t);
+    return () => {
+      clearTimeout(initialTick);
+      clearInterval(t);
+    };
   }, []);
 
   const liveRemaining =
     phase === "running" && endAt ? Math.max(0, endAt - now) : remainingMs;
 
   const persist = useCallback(
-    (over: Partial<PersistState>) => {
-      save(storageKey, {
+    (over: Partial<PomodoroState>) => {
+      setPomodoroState(userId, {
         mode,
         phase,
         endAt,
@@ -108,7 +85,7 @@ export default function Pomodoro({
         ...over,
       });
     },
-    [storageKey, mode, phase, endAt, remainingMs, subjectId, focusMin, breakMin],
+    [userId, mode, phase, endAt, remainingMs, subjectId, focusMin, breakMin],
   );
 
   const saveFocusSession = useCallback(
@@ -138,41 +115,43 @@ export default function Pomodoro({
   // Süre bitişini yakala
   useEffect(() => {
     if (phase !== "running" || !endAt) return;
-    if (now < endAt) {
-      savedSessionRef.current = false;
-      return;
-    }
-    if (savedSessionRef.current) return;
-    savedSessionRef.current = true;
+    const timeout = setTimeout(() => {
+      if (savedSessionRef.current) return;
+      savedSessionRef.current = true;
 
-    // Oturum doğal bitti
-    const total = (mode === "focus" ? focusMin : breakMin) * 60;
-    if (mode === "focus") {
-      saveFocusSession(total);
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-        new Notification("Pomodoro tamamlandı", { body: "Odak süresi bitti, kısa bir mola ver." });
+      const total = (mode === "focus" ? focusMin : breakMin) * 60;
+      if (mode === "focus") {
+        saveFocusSession(total);
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Pomodoro tamamlandı", {
+            body: "Odak süresi bitti, kısa bir mola ver.",
+          });
+        }
+        const nextRem = breakMin * 60 * 1000;
+        setMode("break");
+        setPhase("idle");
+        setEndAt(null);
+        setRemainingMs(nextRem);
+        persist({ mode: "break", phase: "idle", endAt: null, remainingMs: nextRem });
+        toast("Odak oturumu tamamlandı 🎉");
+      } else {
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Mola bitti", {
+            body: "Yeni bir odak oturumuna hazır mısın?",
+          });
+        }
+        const nextRem = focusMin * 60 * 1000;
+        setMode("focus");
+        setPhase("idle");
+        setEndAt(null);
+        setRemainingMs(nextRem);
+        persist({ mode: "focus", phase: "idle", endAt: null, remainingMs: nextRem });
+        toast("Mola bitti");
       }
-      const nextRem = breakMin * 60 * 1000;
-      setMode("break");
-      setPhase("idle");
-      setEndAt(null);
-      setRemainingMs(nextRem);
-      persist({ mode: "break", phase: "idle", endAt: null, remainingMs: nextRem });
-      toast("Odak oturumu tamamlandı 🎉");
-    } else {
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-        new Notification("Mola bitti", { body: "Yeni bir odak oturumuna hazır mısın?" });
-      }
-      const nextRem = focusMin * 60 * 1000;
-      setMode("focus");
-      setPhase("idle");
-      setEndAt(null);
-      setRemainingMs(nextRem);
-      persist({ mode: "focus", phase: "idle", endAt: null, remainingMs: nextRem });
-      toast("Mola bitti");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [now, endAt, phase, mode]);
+    }, Math.max(0, endAt - Date.now()));
+
+    return () => clearTimeout(timeout);
+  }, [phase, endAt, mode, focusMin, breakMin, saveFocusSession, persist, toast]);
 
   function start() {
     const base = phase === "paused" ? remainingMs : (mode === "focus" ? focusMin : breakMin) * 60 * 1000;

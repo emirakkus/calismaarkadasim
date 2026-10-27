@@ -50,14 +50,15 @@ export default function Dashboard({
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const d = await api<OverviewResponse>(`/api/overview?date=${date}`);
-    setData(d);
+    return api<OverviewResponse>(`/api/overview?date=${date}`);
   }, [date]);
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     load()
+      .then((result) => {
+        if (active) setData(result);
+      })
       .catch((e) => active && toast(e.message, "error"))
       .finally(() => active && setLoading(false));
     api<{ tip: string; aiEnabled: boolean }>(`/api/coach/tip?date=${date}`)
@@ -81,7 +82,7 @@ export default function Dashboard({
           status: t.status === "completed" ? "pending" : "completed",
         }),
       });
-      await load();
+      setData(await load());
     } catch (e) {
       toast(e instanceof Error ? e.message : "Hata", "error");
     } finally {
@@ -97,7 +98,7 @@ export default function Dashboard({
         { method: "POST", body: JSON.stringify({ date }) },
       );
       toast(r.created > 0 ? `${r.created} görev oluşturuldu.` : r.message ?? "Görev eklenmedi.");
-      await load();
+      setData(await load());
     } catch (e) {
       toast(e instanceof Error ? e.message : "Hata", "error");
     } finally {
