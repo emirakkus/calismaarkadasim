@@ -1,18 +1,19 @@
 import { db } from "@/db";
-import { examSettings, settings, studyStreak, users } from "@/db/schema";
+import { examSettings, settings, users } from "@/db/schema";
 import { ok, bad, serverError } from "@/lib/api";
 import {
   hashPassword,
   createSession,
   isValidEmail,
 } from "@/lib/auth";
-import { DEFAULT_EXAM_DATE, ensureGlobalSeed } from "@/lib/seed";
+import { DEFAULT_EXAM_DATE } from "@/lib/seed";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   let createdUserId: number | undefined;
+  let stage = "request validation";
   try {
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
     if (!isValidEmail(email)) return bad("Geçerli bir e-posta girin");
     if (password.length < 6) return bad("Parola en az 6 karakter olmalı");
 
+    stage = "checking existing account";
     const existing = await db
       .select({ id: users.id })
       .from(users)
@@ -31,8 +33,7 @@ export async function POST(req: Request) {
       .limit(1);
     if (existing[0]) return bad("Bu e-posta ile zaten bir hesap var", 409);
 
-    await ensureGlobalSeed();
-
+    stage = "creating account and defaults";
     const user = await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(users)
@@ -44,10 +45,10 @@ export async function POST(req: Request) {
         examName: "YKS",
         examDate: DEFAULT_EXAM_DATE,
       });
-      await tx.insert(studyStreak).values({ userId: created.id });
       return created;
     });
     createdUserId = user.id;
+    stage = "creating session";
     await createSession(user.id);
 
     return ok(
@@ -55,7 +56,17 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("[auth/signup] Registration failed", error);
+    const details: Record<string, string> = {
+      stage,
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    };
+    if (error && typeof error === "object") {
+      for (const key of ["code", "constraint", "table", "column"]) {
+        const value = Reflect.get(error, key);
+        if (typeof value === "string") details[key] = value;
+      }
+    }
+    console.error("[auth/signup] Registration failed", details);
     if (createdUserId !== undefined) {
       try {
         await db.delete(users).where(eq(users.id, createdUserId));
