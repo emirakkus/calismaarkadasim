@@ -49,6 +49,9 @@ export default function Dashboard({
   const [tip, setTip] = useState("");
   const [aiEnabled, setAiEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [completionTask, setCompletionTask] = useState<Task | null>(null);
+  const [correctCount, setCorrectCount] = useState("");
+  const [wrongCount, setWrongCount] = useState("");
 
   const load = useCallback(async () => {
     return api<OverviewResponse>(`/api/overview?date=${date}`);
@@ -75,6 +78,13 @@ export default function Dashboard({
   }, [date, load, toast]);
 
   async function toggleComplete(t: Task) {
+    if (t.status !== "completed" && t.questionGoal > 0) {
+      setCorrectCount("");
+      setWrongCount("");
+      setCompletionTask(t);
+      return;
+    }
+
     setBusy(true);
     try {
       await api(`/api/tasks/${t.id}`, {
@@ -83,6 +93,38 @@ export default function Dashboard({
           status: t.status === "completed" ? "pending" : "completed",
         }),
       });
+      setData(await load());
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Hata", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitCompletion(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!completionTask) return;
+
+    const correct = Number(correctCount);
+    const wrong = Number(wrongCount);
+    if (
+      !Number.isInteger(correct) ||
+      !Number.isInteger(wrong) ||
+      correct < 0 ||
+      wrong < 0 ||
+      correct + wrong > completionTask.questionGoal
+    ) {
+      toast("Doğru ve yanlış toplamı görevdeki soru hedefini aşamaz", "error");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      await api(`/api/tasks/${completionTask.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "completed", correct, wrong }),
+      });
+      setCompletionTask(null);
       setData(await load());
     } catch (e) {
       toast(e instanceof Error ? e.message : "Hata", "error");
@@ -121,6 +163,78 @@ export default function Dashboard({
 
   return (
     <div className="space-y-6">
+      {completionTask && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !busy) {
+              setCompletionTask(null);
+            }
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dashboard-completion-title"
+            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+          >
+            <h2 id="dashboard-completion-title" className="text-lg font-semibold text-slate-900">
+              Soruların sonucunu gir
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {completionTask.title} · hedef {completionTask.questionGoal} soru
+            </p>
+            <form className="mt-4 space-y-4" onSubmit={submitCompletion}>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-sm">
+                  <span className="mb-1 block text-slate-600">Doğru</span>
+                  <input
+                    autoFocus
+                    type="number"
+                    min={0}
+                    max={completionTask.questionGoal}
+                    step={1}
+                    required
+                    value={correctCount}
+                    onChange={(event) => setCorrectCount(event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-slate-600">Yanlış</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={completionTask.questionGoal}
+                    step={1}
+                    required
+                    value={wrongCount}
+                    onChange={(event) => setWrongCount(event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </label>
+              </div>
+              <p className="text-xs text-slate-500">
+                Girilmeyen kalan sorular boş sayılır. Boş:{" "}
+                {Math.max(
+                  0,
+                  completionTask.questionGoal -
+                    (Number(correctCount) || 0) -
+                    (Number(wrongCount) || 0),
+                )}
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setCompletionTask(null)} disabled={busy}>
+                  İptal
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  Kaydet ve tamamla
+                </Button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
