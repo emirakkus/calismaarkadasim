@@ -1,0 +1,356 @@
+export const YKS_EA_CURRICULUM_VERSION = 1;
+
+export const YKS_EA_SUBJECTS = [
+  { name: "Fizik", color: "#7c3aed" },
+  { name: "Kimya", color: "#0891b2" },
+  { name: "Biyoloji", color: "#16a34a" },
+  { name: "Din Kültürü ve Ahlak Bilgisi", color: "#ca8a04" },
+] as const;
+
+export const YKS_EA_CURRICULUM = [
+  {
+    subjectName: "Türkçe",
+    topics: [
+      "Sözcükte Anlam",
+      "Cümlede Anlam",
+      "Paragrafta Anlam",
+      "Paragrafın Yapısı",
+      "Ses Bilgisi",
+      "Yazım Kuralları",
+      "Noktalama İşaretleri",
+      "Sözcükte Yapı ve Ekler",
+      "İsimler",
+      "Sıfatlar",
+      "Zamirler",
+      "Zarflar",
+      "Edat, Bağlaç ve Ünlem",
+      "Fiiller",
+      "Ek Fiil",
+      "Fiilde Çatı",
+      "Fiilimsiler",
+      "Cümlenin Ögeleri",
+      "Cümle Türleri",
+      "Anlatım Bozuklukları",
+    ],
+  },
+  {
+    subjectName: "Matematik TYT",
+    topics: [
+      "Temel Kavramlar",
+      "Sayı Basamakları",
+      "Bölme ve Bölünebilme",
+      "EBOB ve EKOK",
+      "Rasyonel Sayılar",
+      "Basit Eşitsizlikler",
+      "Mutlak Değer",
+      "Üslü Sayılar",
+      "Köklü Sayılar",
+      "Çarpanlara Ayırma",
+      "Oran ve Orantı",
+      "Denklemler",
+      "Problemlere Giriş",
+      "Sayı Problemleri",
+      "Kesir Problemleri",
+      "Yaş Problemleri",
+      "Hareket ve İşçi Problemleri",
+      "Yüzde, Kâr-Zarar ve Faiz Problemleri",
+      "Karışım Problemleri",
+      "Grafik ve Tablo Problemleri",
+      "Kümeler",
+      "Kartezyen Çarpım",
+      "Mantık",
+      "Fonksiyonlar",
+      "Permütasyon",
+      "Kombinasyon",
+      "Olasılık",
+      "İstatistik ve Veri",
+    ],
+  },
+  {
+    subjectName: "Matematik AYT",
+    topics: [
+      "Fonksiyonlarda Uygulamalar",
+      "Polinomlar",
+      "İkinci Dereceden Denklemler",
+      "Karmaşık Sayılar",
+      "İkinci Dereceden Eşitsizlikler",
+      "Parabol",
+      "Permütasyon, Kombinasyon ve Binom",
+      "Olasılık",
+      "Trigonometri",
+      "Üstel ve Logaritmik Fonksiyonlar",
+      "Diziler",
+      "Limit",
+      "Süreklilik",
+      "Türev",
+      "Türevin Uygulamaları",
+      "Belirsiz İntegral",
+      "Belirli İntegral ve Uygulamaları",
+    ],
+  },
+  {
+    subjectName: "Geometri",
+    topics: [
+      "Doğruda ve Açılarda Temel Kavramlar",
+      "Üçgende Açılar",
+      "Üçgende Kenar ve Açı İlişkileri",
+      "Özel Üçgenler",
+      "Açıortay ve Kenarortay",
+      "Üçgende Alan",
+      "Üçgende Benzerlik",
+      "Açı-Kenar Bağıntıları",
+      "Çokgenler",
+      "Dörtgenler",
+      "Paralelkenar",
+      "Eşkenar Dörtgen ve Deltoid",
+      "Dikdörtgen ve Kare",
+      "Yamuk",
+      "Çemberde Açılar",
+      "Çemberde Uzunluk ve Teğet",
+      "Dairede Alan",
+      "Noktanın Analitiği",
+      "Doğrunun Analitiği",
+      "Dönüşüm Geometrisi",
+      "Katı Cisimler",
+    ],
+  },
+  {
+    subjectName: "Fizik",
+    topics: [
+      "Fizik Bilimine Giriş",
+      "Madde ve Özellikleri",
+      "Hareket ve Kuvvet",
+      "İş, Güç ve Enerji",
+      "Isı, Sıcaklık ve Genleşme",
+      "Basınç ve Kaldırma Kuvveti",
+      "Elektrostatik",
+      "Elektrik Akımı ve Devreler",
+      "Manyetizma",
+      "Dalgalar",
+      "Optik",
+    ],
+  },
+  {
+    subjectName: "Kimya",
+    topics: [
+      "Kimya Bilimi",
+      "Atom ve Periyodik Sistem",
+      "Kimyasal Türler Arası Etkileşimler",
+      "Maddenin Hâlleri",
+      "Doğa ve Kimya",
+      "Kimyanın Temel Kanunları",
+      "Mol Kavramı ve Kimyasal Hesaplamalar",
+      "Karışımlar",
+      "Asitler, Bazlar ve Tuzlar",
+      "Kimya Her Yerde",
+      "Modern Atom Teorisi",
+      "Gazlar",
+      "Sıvı Çözeltiler ve Çözünürlük",
+      "Kimyasal Tepkimelerde Enerji",
+      "Kimyasal Tepkimelerde Hız",
+      "Kimyasal Tepkimelerde Denge",
+      "Asit-Baz Dengesi",
+      "Çözünürlük Dengesi",
+      "Kimya ve Elektrik",
+      "Organik Kimya",
+    ],
+  },
+  {
+    subjectName: "Biyoloji",
+    topics: [
+      "Canlıların Ortak Özellikleri",
+      "Canlıların Temel Bileşenleri",
+      "Hücre ve Organeller",
+      "Hücre Zarından Madde Geçişleri",
+      "Canlıların Sınıflandırılması",
+      "Hücre Bölünmeleri",
+      "Üreme ve Gelişme",
+      "Kalıtımın Genel İlkeleri",
+      "Ekosistem Ekolojisi",
+      "Güncel Çevre Sorunları",
+      "İnsan Fizyolojisi",
+      "Sinir Sistemi",
+      "Endokrin Sistem",
+      "Duyu Organları",
+      "Destek ve Hareket Sistemi",
+      "Sindirim Sistemi",
+      "Dolaşım ve Bağışıklık Sistemi",
+      "Solunum Sistemi",
+      "Boşaltım Sistemi",
+      "Üreme Sistemi ve Embriyonik Gelişim",
+      "Komünite ve Popülasyon Ekolojisi",
+      "Genden Proteine",
+      "Enerji Dönüşümleri",
+      "Bitki Biyolojisi",
+      "Canlılar ve Çevre",
+    ],
+  },
+  {
+    subjectName: "Tarih",
+    topics: [
+      "Tarih ve Zaman",
+      "İnsanlığın İlk Dönemleri",
+      "Orta Çağ'da Dünya",
+      "İlk ve Orta Çağlarda Türk Dünyası",
+      "İslam Medeniyetinin Doğuşu",
+      "İlk Türk-İslam Devletleri",
+      "Yerleşme ve Devletleşme Sürecinde Selçuklu Türkiyesi",
+      "Beylikten Devlete Osmanlı",
+      "Dünya Gücü Osmanlı",
+      "Osmanlı Devlet Teşkilatı ve Toplumu",
+      "Değişen Dünya Dengeleri Karşısında Osmanlı",
+      "18. Yüzyılda Değişim ve Diplomasi",
+      "En Uzun Yüzyılda Osmanlı",
+      "20. Yüzyıl Başlarında Osmanlı ve Dünya",
+      "Millî Mücadele'nin Hazırlık Dönemi",
+      "Kurtuluş Savaşı Cepheleri",
+      "Türkiye Cumhuriyeti'nin Kuruluşu",
+      "Atatürk İlke ve İnkılapları",
+      "İki Savaş Arasındaki Dönemde Türkiye ve Dünya",
+      "II. Dünya Savaşı ve Sonrası",
+      "Soğuk Savaş Dönemi",
+      "Küreselleşen Dünya",
+    ],
+  },
+  {
+    subjectName: "Coğrafya",
+    topics: [
+      "Doğa ve İnsan",
+      "Dünya'nın Şekli ve Hareketleri",
+      "Coğrafi Konum",
+      "Harita Bilgisi",
+      "Atmosfer ve İklim Bilgisi",
+      "Sıcaklık, Basınç ve Rüzgârlar",
+      "Nem ve Yağış",
+      "İklim Tipleri",
+      "Yer'in Şekillenmesi",
+      "İç Kuvvetler",
+      "Dış Kuvvetler",
+      "Su, Toprak ve Bitki Toplulukları",
+      "Nüfus ve Nüfusun Özellikleri",
+      "Göç ve Yerleşme",
+      "Ekonomik Faaliyetler",
+      "Türkiye'nin Yer Şekilleri ve İklimi",
+      "Türkiye'de Nüfus ve Yerleşme",
+      "Türkiye'de Ekonomik Faaliyetler",
+      "Bölgeler ve Ülkeler",
+      "Küresel Ortam: Bölgeler ve Ülkeler",
+      "Doğal Kaynaklar ve Çevre",
+      "Doğal Afetler",
+      "Çevre Sorunları ve Sürdürülebilirlik",
+    ],
+  },
+  {
+    subjectName: "Felsefe",
+    topics: [
+      "Felsefenin Konusu ve Temel Soruları",
+      "Felsefi Düşüncenin Özellikleri",
+      "Bilgi Felsefesi",
+      "Varlık Felsefesi",
+      "Bilim Felsefesi",
+      "Ahlak Felsefesi",
+      "Din Felsefesi",
+      "Siyaset Felsefesi",
+      "Sanat Felsefesi",
+      "İlk Çağ Felsefesi",
+      "Orta Çağ Felsefesi",
+      "15-17. Yüzyıl Felsefesi",
+      "18-19. Yüzyıl Felsefesi",
+      "20. Yüzyıl Felsefesi",
+    ],
+  },
+  {
+    subjectName: "Din Kültürü ve Ahlak Bilgisi",
+    topics: [
+      "Bilgi ve İnanç",
+      "Din ve İslam",
+      "İslam ve İbadet",
+      "Gençlik ve Değerler",
+      "Gönül Coğrafyamız",
+      "Allah-İnsan İlişkisi",
+      "Hz. Muhammed ve Gençlik",
+      "Ahlaki Tutum ve Davranışlar",
+      "İslam Düşüncesinde İtikadi ve Siyasi Yorumlar",
+      "Din, Kültür ve Medeniyet",
+      "İslam ve Bilim",
+      "Anadolu'da İslam",
+      "İslam Düşüncesinde Tasavvufi Yorumlar",
+      "Güncel Dini Meseleler",
+      "Yahudilik ve Hristiyanlık",
+    ],
+  },
+  {
+    subjectName: "Türk Dili ve Edebiyatı",
+    topics: [
+      "Edebiyatın Bilimlerle İlişkisi ve Metinler",
+      "Şiir Bilgisi ve Nazım Biçimleri",
+      "Sözlü Edebiyat Dönemi",
+      "İslamiyet Öncesi Türk Edebiyatı",
+      "Geçiş Dönemi Türk Edebiyatı",
+      "Halk Edebiyatı",
+      "Divan Edebiyatı",
+      "Tanzimat Edebiyatı",
+      "Servetifünun Edebiyatı",
+      "Fecr-i Âti Edebiyatı",
+      "Millî Edebiyat",
+      "Cumhuriyet Dönemi Türk Edebiyatı",
+      "Dünya Edebiyatı",
+      "Edebi Akımlar",
+      "Hikâye ve Roman",
+      "Şiir",
+      "Tiyatro",
+      "Öğretici Metinler",
+      "Edebi Metinleri Çözümleme",
+      "Yazarlar ve Eserler",
+    ],
+  },
+] as const;
+
+export type YksEaTopicSeed = {
+  subjectId: number;
+  name: string;
+  orderIndex: number;
+  estimatedMinutes: number;
+  status: "pending";
+};
+
+export function getMissingYksEaTopics(
+  existing: { subjectId: number; name: string; orderIndex: number }[],
+  subjects: { id: number; name: string }[],
+): YksEaTopicSeed[] {
+  const subjectIds = new Map(subjects.map((subject) => [subject.name, subject.id]));
+  const existingKeys = new Set(
+    existing.map((topic) => `${topic.subjectId}\u0000${topic.name}`),
+  );
+  const nextOrder = new Map<number, number>();
+  for (const topic of existing) {
+    nextOrder.set(
+      topic.subjectId,
+      Math.max(nextOrder.get(topic.subjectId) ?? 0, topic.orderIndex),
+    );
+  }
+  const missing: YksEaTopicSeed[] = [];
+
+  for (const course of YKS_EA_CURRICULUM) {
+    const subjectId = subjectIds.get(course.subjectName);
+    if (subjectId === undefined) {
+      throw new Error(`YKS müfredat dersi bulunamadı: ${course.subjectName}`);
+    }
+
+    for (const name of course.topics) {
+      const key = `${subjectId}\u0000${name}`;
+      if (existingKeys.has(key)) continue;
+      const orderIndex = (nextOrder.get(subjectId) ?? 0) + 1;
+      nextOrder.set(subjectId, orderIndex);
+      missing.push({
+        subjectId,
+        name,
+        orderIndex,
+        estimatedMinutes: 60,
+        status: "pending",
+      });
+      existingKeys.add(key);
+    }
+  }
+  return missing;
+}

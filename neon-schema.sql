@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS "settings" (
 	"reminder_time" text DEFAULT '19:00' NOT NULL,
 	"default_daily_question_goal" integer DEFAULT 120 NOT NULL,
 	"default_daily_minutes_goal" integer DEFAULT 240 NOT NULL,
+	"curriculum_version" integer DEFAULT 0 NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "settings_user_id_unique" UNIQUE("user_id")
 );

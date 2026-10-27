@@ -68,6 +68,9 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
    ```bash
    npx drizzle-kit push
    ```
+   Mevcut Neon veritabanlarında `migrations/20261027_yks_ea_curriculum.sql`
+   migration'ını SQL Editor'da bir kez çalıştır. Bu migration, kullanıcı başına
+   müfredat seed sürümünü takip eden kolonu ekler.
 4. Geliştirme sunucusu:
    ```bash
    npm run dev

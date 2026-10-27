@@ -5,9 +5,15 @@ import {
   settings,
   examSettings,
   studyStreak,
+  topics,
 } from "@/db/schema";
 import { buildTimetable, distinctSubjects } from "@/lib/timetable";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import {
+  getMissingYksEaTopics,
+  YKS_EA_CURRICULUM_VERSION,
+  YKS_EA_SUBJECTS,
+} from "@/lib/yks-ea-curriculum";
 
 let globalSeeded = false;
 export const DEFAULT_EXAM_DATE = "2027-06-19";
@@ -19,7 +25,11 @@ export const DEFAULT_EXAM_DATE = "2027-06-19";
 export async function ensureGlobalSeed(): Promise<void> {
   if (globalSeeded) return;
 
-  const subs = [...distinctSubjects(), { name: "Paragraf", color: "#0d9488" }];
+  const subs = [
+    ...distinctSubjects(),
+    { name: "Paragraf", color: "#0d9488" },
+    ...YKS_EA_SUBJECTS,
+  ];
   for (const s of subs) {
     await db
       .insert(subjects)
@@ -57,6 +67,51 @@ export async function ensureUserData(
   if (!s[0]) {
     await db.insert(settings).values({ userId, userName }).onConflictDoNothing();
   }
+
+  await db.transaction(async (tx) => {
+    const [userSettings] = await tx
+      .select({
+        id: settings.id,
+        curriculumVersion: settings.curriculumVersion,
+      })
+      .from(settings)
+      .where(eq(settings.userId, userId))
+      .for("update")
+      .limit(1);
+
+    if (!userSettings) {
+      throw new Error(`Kullanıcı ayarları oluşturulamadı: ${userId}`);
+    }
+
+    if (userSettings.curriculumVersion < YKS_EA_CURRICULUM_VERSION) {
+      const [existingTopics, allSubjects] = await Promise.all([
+        tx
+          .select({
+            subjectId: topics.subjectId,
+            name: topics.name,
+            orderIndex: topics.orderIndex,
+          })
+          .from(topics)
+          .where(eq(topics.userId, userId)),
+        tx.select({ id: subjects.id, name: subjects.name }).from(subjects),
+      ]);
+      const missingTopics = getMissingYksEaTopics(existingTopics, allSubjects);
+
+      if (missingTopics.length > 0) {
+        await tx.insert(topics).values(
+          missingTopics.map((topic) => ({
+            userId,
+            ...topic,
+          })),
+        );
+      }
+
+      await tx
+        .update(settings)
+        .set({ curriculumVersion: YKS_EA_CURRICULUM_VERSION })
+        .where(eq(settings.id, userSettings.id));
+    }
+  });
 
   const e = await db
     .select({ id: examSettings.id })
