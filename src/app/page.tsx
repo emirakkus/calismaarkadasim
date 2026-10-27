@@ -108,6 +108,7 @@ export default function Page() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sentReminders = useRef(new Set<string>());
 
   const toast = useCallback((msg: string, type: "success" | "error" = "success") => {
     const id = Date.now() + Math.random();
@@ -135,8 +136,6 @@ export default function Page() {
   // Giriş yapıldığında uygulama verisini yükle
   useEffect(() => {
     if (!authUser) return;
-    setLoading(true);
-    setLoadError("");
     (async () => {
       try {
         const [sch, set] = await Promise.all([
@@ -168,9 +167,24 @@ export default function Page() {
   }, [authUser, loadAttempt]);
 
   useEffect(() => {
-    if (!loading && authUser) loadDay(date).catch((e) => toast(e.message, "error"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date]);
+    if (loading || !authUser) return;
+    let active = true;
+    api<DayResponse>(`/api/day?date=${date}`)
+      .then((data) => {
+        if (active) setDay(data);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          toast(
+            error instanceof Error ? error.message : "Günlük plan yüklenemedi",
+            "error",
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [date, loading, authUser, toast]);
 
   async function logout() {
     try {
@@ -187,7 +201,10 @@ export default function Page() {
 
   // Hatırlatma zamanlayıcısı
   const reminderRef = useRef<SettingsType | null>(null);
-  reminderRef.current = settings;
+  useEffect(() => {
+    reminderRef.current = settings;
+  }, [settings]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const s = reminderRef.current;
@@ -199,15 +216,15 @@ export default function Page() {
       const mm = String(now.getMinutes()).padStart(2, "0");
       if (`${hh}:${mm}` !== s.reminderTime) return;
       if (!authUser) return;
-      const key = `cya-reminder-${authUser.id}-${todayISO()}`;
-      if (localStorage.getItem(key)) return;
-      localStorage.setItem(key, "1");
+      const key = `${authUser.id}-${todayISO()}`;
+      if (sentReminders.current.has(key)) return;
+      sentReminders.current.add(key);
       new Notification("Çalışma Yol Arkadaşım", {
         body: "Bugünkü çalışma planını tamamlamayı unutma! 📚",
       });
     }, 30000);
     return () => clearInterval(interval);
-  }, [authUser?.id]);
+  }, [authUser]);
 
   const name = authUser?.name?.trim() || settings?.userName?.trim();
   const initial = name ? name[0].toLocaleUpperCase("tr") : "Ç";
@@ -221,7 +238,18 @@ export default function Page() {
   }
 
   if (!authUser) {
-    return <AuthScreen onAuthed={(u) => setAuthUser(u)} />;
+    return (
+      <AuthScreen
+        onAuthed={(user) => {
+          setLoading(true);
+          setLoadError("");
+          setDay(null);
+          setSettings(null);
+          setSubjects([]);
+          setAuthUser(user);
+        }}
+      />
+    );
   }
 
   if (loadError) {
@@ -238,6 +266,7 @@ export default function Page() {
             <button
               onClick={() => {
                 setLoading(true);
+                setLoadError("");
                 setLoadAttempt((attempt) => attempt + 1);
               }}
               className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"

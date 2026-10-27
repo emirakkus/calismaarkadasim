@@ -6,14 +6,13 @@ import {
   createSession,
   isValidEmail,
 } from "@/lib/auth";
-import { ensureUserData, ensureGlobalSeed } from "@/lib/seed";
+import { ensureUserData } from "@/lib/seed";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    await ensureGlobalSeed();
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
 
