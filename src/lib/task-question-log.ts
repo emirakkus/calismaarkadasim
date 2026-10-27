@@ -31,7 +31,8 @@ export function questionLogForCompletedTask(
   breakdown?: TaskQuestionBreakdown,
 ) {
   if (task.questionGoal <= 0) return null;
-  if (breakdown && !isValidTaskQuestionBreakdown(task.questionGoal, breakdown)) {
+  if (!breakdown) return null;
+  if (!isValidTaskQuestionBreakdown(task.questionGoal, breakdown)) {
     throw new Error("Doğru ve yanlış soru sayıları hedefi aşamaz");
   }
 
@@ -43,10 +44,10 @@ export function questionLogForCompletedTask(
     subjectName: task.subjectName,
     topicId: task.topicId,
     total: task.questionGoal,
-    correct: breakdown?.correct ?? 0,
-    wrong: breakdown?.wrong ?? 0,
-    blank: breakdown ? task.questionGoal - breakdown.correct - breakdown.wrong : 0,
-    breakdownAvailable: Boolean(breakdown),
+    correct: breakdown.correct,
+    wrong: breakdown.wrong,
+    blank: task.questionGoal - breakdown.correct - breakdown.wrong,
+    breakdownAvailable: true,
     note: null,
   };
 }

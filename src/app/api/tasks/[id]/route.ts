@@ -64,12 +64,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         .from(tasks)
         .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
         .limit(1);
-      if (!existingTask) return { task: null, invalidBreakdown: false };
+      if (!existingTask) {
+        return { task: null, invalidBreakdown: false, missingBreakdown: false };
+      }
+      if (
+        body.status === "completed" &&
+        existingTask.questionGoal > 0 &&
+        !breakdown
+      ) {
+        return { task: null, invalidBreakdown: false, missingBreakdown: true };
+      }
       if (
         breakdown &&
         !isValidTaskQuestionBreakdown(existingTask.questionGoal, breakdown)
       ) {
-        return { task: null, invalidBreakdown: true };
+        return { task: null, invalidBreakdown: true, missingBreakdown: false };
       }
 
       const [task] = await tx
@@ -77,7 +86,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         .set(update)
         .where(and(eq(tasks.id, asInt(id)), eq(tasks.userId, userId)))
         .returning();
-      if (!task) return { task: null, invalidBreakdown: false };
+      if (!task) {
+        return { task: null, invalidBreakdown: false, missingBreakdown: false };
+      }
 
       const questionLog = task.status === "completed"
         ? questionLogForCompletedTask(task, breakdown)
@@ -99,7 +110,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         } else {
           await insert.onConflictDoNothing({ target: questionLogs.taskId });
         }
-      } else {
+      } else if (task.status !== "completed" || task.questionGoal <= 0) {
         await tx
           .delete(questionLogs)
           .where(
@@ -109,8 +120,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             ),
           );
       }
-      return { task, invalidBreakdown: false };
+      return { task, invalidBreakdown: false, missingBreakdown: false };
     });
+    if (result.missingBreakdown) {
+      return bad("Tamamlanan görev için doğru ve yanlış sayısını girmelisiniz");
+    }
     if (result.invalidBreakdown) {
       return bad("Doğru ve yanlış toplamı görev soru hedefini aşamaz");
     }
