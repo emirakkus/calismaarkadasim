@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { settings } from "@/db/schema";
-import { ensureSeed } from "@/lib/seed";
+import { getUserId, unauthorized } from "@/lib/auth";
+import { ensureUserData } from "@/lib/seed";
 import { ok, bad, serverError, asInt } from "@/lib/api";
 import { eq } from "drizzle-orm";
 
@@ -8,8 +9,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    await ensureSeed();
-    const [row] = await db.select().from(settings).where(eq(settings.id, 1)).limit(1);
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+    await ensureUserData(userId);
+    const [row] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, userId))
+      .limit(1);
     return ok({ settings: row });
   } catch {
     return serverError();
@@ -18,7 +25,9 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await ensureSeed();
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+    await ensureUserData(userId);
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
 
@@ -33,22 +42,15 @@ export async function PUT(req: Request) {
       update.reminderTime = t;
     }
     if (body.defaultDailyQuestionGoal !== undefined)
-      update.defaultDailyQuestionGoal = Math.max(
-        0,
-        asInt(body.defaultDailyQuestionGoal),
-      );
+      update.defaultDailyQuestionGoal = Math.max(0, asInt(body.defaultDailyQuestionGoal));
     if (body.defaultDailyMinutesGoal !== undefined)
-      update.defaultDailyMinutesGoal = Math.max(
-        0,
-        asInt(body.defaultDailyMinutesGoal),
-      );
+      update.defaultDailyMinutesGoal = Math.max(0, asInt(body.defaultDailyMinutesGoal));
 
     const [row] = await db
       .update(settings)
       .set(update)
-      .where(eq(settings.id, 1))
+      .where(eq(settings.userId, userId))
       .returning();
-
     return ok({ settings: row });
   } catch {
     return serverError();

@@ -1,19 +1,18 @@
 import { db } from "@/db";
 import { wrongQuestions } from "@/db/schema";
+import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError, asInt } from "@/lib/api";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
     const { id } = await params;
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
-
     const update: Record<string, unknown> = { updatedAt: new Date() };
     if (body.questionText !== undefined) {
       const t = String(body.questionText).trim();
@@ -24,16 +23,10 @@ export async function PATCH(
       if (body[f] !== undefined) update[f] = body[f] ? String(body[f]) : null;
     }
     if (body.reviewStatus !== undefined) {
-      if (!["open", "reviewed"].includes(body.reviewStatus))
-        return bad("Geçersiz durum");
+      if (!["open", "reviewed"].includes(body.reviewStatus)) return bad("Geçersiz durum");
       update.reviewStatus = body.reviewStatus;
     }
-
-    const [updated] = await db
-      .update(wrongQuestions)
-      .set(update)
-      .where(eq(wrongQuestions.id, asInt(id)))
-      .returning();
+    const [updated] = await db.update(wrongQuestions).set(update).where(and(eq(wrongQuestions.id, asInt(id)), eq(wrongQuestions.userId, userId))).returning();
     if (!updated) return bad("Kayıt bulunamadı", 404);
     return ok({ wrongQuestion: updated });
   } catch {
@@ -41,16 +34,12 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
     const { id } = await params;
-    const [deleted] = await db
-      .delete(wrongQuestions)
-      .where(eq(wrongQuestions.id, asInt(id)))
-      .returning();
+    const [deleted] = await db.delete(wrongQuestions).where(and(eq(wrongQuestions.id, asInt(id)), eq(wrongQuestions.userId, userId))).returning();
     if (!deleted) return bad("Kayıt bulunamadı", 404);
     return ok({ ok: true });
   } catch {

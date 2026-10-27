@@ -15,29 +15,29 @@ import {
   examSettings,
   settings,
 } from "@/db/schema";
-import { ensureSeed } from "@/lib/seed";
+import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError } from "@/lib/api";
 import { validateBackup } from "@/lib/backup";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Yedek doğrulama (mode=validate) veya geri yükleme (mode=replace).
- * replace: kullanıcı verisi tabloları temizlenip yeniden yüklenir; ID'ler
- * yeniden eşlenerek ilişkiler korunur. Geçersiz dosyada mevcut veri bozulmaz.
+ * replace: yalnızca MEVCUT KULLANICININ verisi silinip yeniden yüklenir; ID'ler
+ * yeniden eşlenerek ilişkiler korunur. Dersler/program global olduğundan dokunulmaz.
  */
 export async function POST(req: Request) {
   try {
-    await ensureSeed();
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+
     const body = await req.json().catch(() => null);
     const mode = body?.mode === "replace" ? "replace" : "validate";
     const file = body?.backup;
 
     const validation = validateBackup(file);
-    if (mode === "validate") {
-      return ok({ validation });
-    }
+    if (mode === "validate") return ok({ validation });
     if (!validation.valid) {
       return bad(
         "Geçersiz yedek dosyası, geri yükleme iptal edildi: " +
@@ -46,53 +46,36 @@ export async function POST(req: Request) {
     }
 
     const data = (file as { data: Record<string, unknown[]> }).data;
-    const arr = <T>(k: string): T[] => ((data[k] as T[]) ?? []);
+    const arr = <T>(k: string): T[] => (data[k] as T[]) ?? [];
 
-    // İlişkileri koruyacak ID eşleme tablolarıyla replace.
+    const subs = await db.select().from(subjects);
+    const subByName = new Map(subs.map((s) => [s.name, s.id]));
+
     await db.transaction(async (tx) => {
-      // Temizle (çocuktan ebeveyne)
-      await tx.delete(milestones);
-      await tx.delete(studyGoals);
-      await tx.delete(energyLogs);
-      await tx.delete(wrongQuestions);
-      await tx.delete(studyNotes);
-      await tx.delete(reviewTasks);
-      await tx.delete(studySessions);
-      await tx.delete(questionLogs);
-      await tx.delete(tasks);
-      await tx.delete(dailyGoals);
-      await tx.delete(topics);
-      await tx.delete(subjects);
-
-      const subMap = new Map<number, number>();
-      for (const s of arr<Record<string, unknown>>("subjects")) {
-        const [row] = await tx
-          .insert(subjects)
-          .values({
-            name: String(s.name),
-            color: String(s.color ?? "#2563eb"),
-          })
-          .onConflictDoNothing({ target: subjects.name })
-          .returning();
-        let newId = row?.id;
-        if (!newId) {
-          const [existing] = await tx
-            .select()
-            .from(subjects)
-            .where(eq(subjects.name, String(s.name)))
-            .limit(1);
-          newId = existing?.id;
-        }
-        if (newId) subMap.set(Number(s.id), newId);
-      }
+      // Yalnızca bu kullanıcının verisini temizle (çocuktan ebeveyne)
+      await tx.delete(milestones).where(eq(milestones.userId, userId));
+      await tx.delete(studyGoals).where(eq(studyGoals.userId, userId));
+      await tx.delete(energyLogs).where(eq(energyLogs.userId, userId));
+      await tx.delete(wrongQuestions).where(eq(wrongQuestions.userId, userId));
+      await tx.delete(studyNotes).where(eq(studyNotes.userId, userId));
+      await tx.delete(reviewTasks).where(eq(reviewTasks.userId, userId));
+      await tx.delete(studySessions).where(eq(studySessions.userId, userId));
+      await tx.delete(questionLogs).where(eq(questionLogs.userId, userId));
+      await tx.delete(tasks).where(eq(tasks.userId, userId));
+      await tx.delete(dailyGoals).where(eq(dailyGoals.userId, userId));
+      await tx.delete(topics).where(eq(topics.userId, userId));
 
       const topicMap = new Map<number, number>();
       for (const t of arr<Record<string, unknown>>("topics")) {
-        const sid = subMap.get(Number(t.subjectId));
+        // Yedekteki eski subjectId'yi ada göre global derse eşle
+        const oldSubs = arr<Record<string, unknown>>("subjects");
+        const oldSub = oldSubs.find((s) => Number(s.id) === Number(t.subjectId));
+        const sid = oldSub ? subByName.get(String(oldSub.name)) : undefined;
         if (!sid) continue;
         const [row] = await tx
           .insert(topics)
           .values({
+            userId,
             subjectId: sid,
             name: String(t.name),
             description: t.description ? String(t.description) : null,
@@ -104,13 +87,20 @@ export async function POST(req: Request) {
         if (row) topicMap.set(Number(t.id), row.id);
       }
 
+      const subIdByOld = (oldId: unknown): number | null => {
+        const oldSubs = arr<Record<string, unknown>>("subjects");
+        const oldSub = oldSubs.find((s) => Number(s.id) === Number(oldId));
+        return oldSub ? subByName.get(String(oldSub.name)) ?? null : null;
+      };
+
       const taskMap = new Map<number, number>();
       for (const t of arr<Record<string, unknown>>("tasks")) {
         const [row] = await tx
           .insert(tasks)
           .values({
+            userId,
             date: String(t.date),
-            subjectId: subMap.get(Number(t.subjectId)) ?? null,
+            subjectId: subIdByOld(t.subjectId),
             subjectName: String(t.subjectName ?? "Genel"),
             topicId: topicMap.get(Number(t.topicId)) ?? null,
             title: String(t.title),
@@ -129,8 +119,9 @@ export async function POST(req: Request) {
 
       for (const q of arr<Record<string, unknown>>("questionLogs")) {
         await tx.insert(questionLogs).values({
+          userId,
           date: String(q.date),
-          subjectId: subMap.get(Number(q.subjectId)) ?? null,
+          subjectId: subIdByOld(q.subjectId),
           subjectName: String(q.subjectName ?? "Genel"),
           topicId: topicMap.get(Number(q.topicId)) ?? null,
           total: Number(q.total ?? 0),
@@ -144,8 +135,9 @@ export async function POST(req: Request) {
 
       for (const s of arr<Record<string, unknown>>("studySessions")) {
         await tx.insert(studySessions).values({
+          userId,
           date: String(s.date),
-          subjectId: subMap.get(Number(s.subjectId)) ?? null,
+          subjectId: subIdByOld(s.subjectId),
           subjectName: String(s.subjectName ?? "Genel"),
           taskId: taskMap.get(Number(s.taskId)) ?? null,
           topicId: topicMap.get(Number(s.topicId)) ?? null,
@@ -157,36 +149,33 @@ export async function POST(req: Request) {
       }
 
       for (const g of arr<Record<string, unknown>>("dailyGoals")) {
-        await tx
-          .insert(dailyGoals)
-          .values({
-            date: String(g.date),
-            questionGoal: Number(g.questionGoal ?? 0),
-            minutesGoal: Number(g.minutesGoal ?? 0),
-          })
-          .onConflictDoNothing({ target: dailyGoals.date });
+        await tx.insert(dailyGoals).values({
+          userId,
+          date: String(g.date),
+          questionGoal: Number(g.questionGoal ?? 0),
+          minutesGoal: Number(g.minutesGoal ?? 0),
+        });
       }
 
       for (const r of arr<Record<string, unknown>>("reviewTasks")) {
         const tid = topicMap.get(Number(r.topicId));
         if (!tid) continue;
-        await tx
-          .insert(reviewTasks)
-          .values({
-            topicId: tid,
-            subjectName: String(r.subjectName ?? "Genel"),
-            topicName: String(r.topicName ?? ""),
-            stage: Number(r.stage ?? 1),
-            scheduledDate: String(r.scheduledDate),
-            status: String(r.status ?? "pending"),
-            recallRating: r.recallRating ? String(r.recallRating) : null,
-          })
-          .onConflictDoNothing({ target: [reviewTasks.topicId, reviewTasks.stage] });
+        await tx.insert(reviewTasks).values({
+          userId,
+          topicId: tid,
+          subjectName: String(r.subjectName ?? "Genel"),
+          topicName: String(r.topicName ?? ""),
+          stage: Number(r.stage ?? 1),
+          scheduledDate: String(r.scheduledDate),
+          status: String(r.status ?? "pending"),
+          recallRating: r.recallRating ? String(r.recallRating) : null,
+        });
       }
 
       for (const n of arr<Record<string, unknown>>("studyNotes")) {
         await tx.insert(studyNotes).values({
-          subjectId: subMap.get(Number(n.subjectId)) ?? null,
+          userId,
+          subjectId: subIdByOld(n.subjectId),
           subjectName: n.subjectName ? String(n.subjectName) : null,
           topicId: topicMap.get(Number(n.topicId)) ?? null,
           title: String(n.title),
@@ -198,7 +187,8 @@ export async function POST(req: Request) {
 
       for (const w of arr<Record<string, unknown>>("wrongQuestions")) {
         await tx.insert(wrongQuestions).values({
-          subjectId: subMap.get(Number(w.subjectId)) ?? null,
+          userId,
+          subjectId: subIdByOld(w.subjectId),
           subjectName: w.subjectName ? String(w.subjectName) : null,
           topicId: topicMap.get(Number(w.topicId)) ?? null,
           questionText: String(w.questionText),
@@ -215,6 +205,7 @@ export async function POST(req: Request) {
         const [row] = await tx
           .insert(studyGoals)
           .values({
+            userId,
             title: String(g.title),
             description: g.description ? String(g.description) : null,
             goalType: String(g.goalType ?? "questions"),
@@ -233,6 +224,7 @@ export async function POST(req: Request) {
         const gid = goalMap.get(Number(m.goalId));
         if (!gid) continue;
         await tx.insert(milestones).values({
+          userId,
           goalId: gid,
           title: String(m.title),
           targetValue: Number(m.targetValue ?? 0),
@@ -243,6 +235,7 @@ export async function POST(req: Request) {
 
       for (const e of arr<Record<string, unknown>>("energyLogs")) {
         await tx.insert(energyLogs).values({
+          userId,
           date: String(e.date),
           energy: Number(e.energy ?? 3),
           motivation: Number(e.motivation ?? 3),
@@ -250,7 +243,6 @@ export async function POST(req: Request) {
         });
       }
 
-      // Tekil ayarlar
       const exam = (data as Record<string, unknown>).exam as
         | Record<string, unknown>
         | null
@@ -264,7 +256,7 @@ export async function POST(req: Request) {
             weakThreshold: Number(exam.weakThreshold ?? 60),
             updatedAt: new Date(),
           })
-          .where(eq(examSettings.id, 1));
+          .where(eq(examSettings.userId, userId));
       }
       const st = (data as Record<string, unknown>).settings as
         | Record<string, unknown>
@@ -281,7 +273,7 @@ export async function POST(req: Request) {
             defaultDailyMinutesGoal: Number(st.defaultDailyMinutesGoal ?? 240),
             updatedAt: new Date(),
           })
-          .where(eq(settings.id, 1));
+          .where(eq(settings.userId, userId));
       }
     });
 

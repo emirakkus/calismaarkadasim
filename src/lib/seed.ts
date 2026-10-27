@@ -7,18 +7,17 @@ import {
   studyStreak,
 } from "@/db/schema";
 import { buildTimetable, distinctSubjects } from "@/lib/timetable";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
-let seeded = false;
+let globalSeeded = false;
 
 /**
- * Programı (dersler + haftalık ders programı) ve varsayılan ayarları
- * yalnızca eksikse ekler. Tekrar çağrılması veriyi çoğaltmaz.
+ * Global (tüm kullanıcılar için ortak) veri: dersler ve haftalık ders programı.
+ * Yalnızca eksikse eklenir; tekrar çağrılması veriyi çoğaltmaz.
  */
-export async function ensureSeed(): Promise<void> {
-  if (seeded) return;
+export async function ensureGlobalSeed(): Promise<void> {
+  if (globalSeeded) return;
 
-  // Dersler (programdaki dersler + günlük paragraf hedefi için "Paragraf")
   const subs = [...distinctSubjects(), { name: "Paragraf", color: "#0d9488" }];
   for (const s of subs) {
     await db
@@ -27,7 +26,6 @@ export async function ensureSeed(): Promise<void> {
       .onConflictDoNothing({ target: subjects.name });
   }
 
-  // Haftalık ders programı — yalnızca tamamen boşsa yükle
   const existing = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(scheduleSlots);
@@ -38,23 +36,42 @@ export async function ensureSeed(): Promise<void> {
     }
   }
 
-  // Ayarlar tekil kaydı
-  await db
-    .insert(settings)
-    .values({ id: 1 })
-    .onConflictDoNothing({ target: settings.id });
+  globalSeeded = true;
+}
 
-  // Sınav ayarı tekil kaydı
-  await db
-    .insert(examSettings)
-    .values({ id: 1 })
-    .onConflictDoNothing({ target: examSettings.id });
+/**
+ * Kullanıcıya özel tekil kayıtlar (ayarlar, sınav, seri) yoksa oluşturur.
+ */
+export async function ensureUserData(
+  userId: number,
+  userName = "",
+): Promise<void> {
+  await ensureGlobalSeed();
 
-  // Çalışma serisi tekil kaydı
-  await db
-    .insert(studyStreak)
-    .values({ id: 1 })
-    .onConflictDoNothing({ target: studyStreak.id });
+  const s = await db
+    .select({ id: settings.id })
+    .from(settings)
+    .where(eq(settings.userId, userId))
+    .limit(1);
+  if (!s[0]) {
+    await db.insert(settings).values({ userId, userName }).onConflictDoNothing();
+  }
 
-  seeded = true;
+  const e = await db
+    .select({ id: examSettings.id })
+    .from(examSettings)
+    .where(eq(examSettings.userId, userId))
+    .limit(1);
+  if (!e[0]) {
+    await db.insert(examSettings).values({ userId }).onConflictDoNothing();
+  }
+
+  const st = await db
+    .select({ id: studyStreak.id })
+    .from(studyStreak)
+    .where(eq(studyStreak.userId, userId))
+    .limit(1);
+  if (!st[0]) {
+    await db.insert(studyStreak).values({ userId }).onConflictDoNothing();
+  }
 }

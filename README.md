@@ -12,6 +12,12 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
 
 ## Özellikler
 
+- **Hesap sistemi (giriş/kayıt):** E-posta + parola ile kayıt ve giriş. Parolalar
+  `scrypt` ile hash'lenerek saklanır. Oturum, httpOnly cookie içindeki token ile
+  sunucuda tutulur; **çıkış yapınca oturum sunucudan silinir** ve sayfa yenilense de
+  tekrar giriş gerekir. Her kullanıcının verisi (görevler, sorular, notlar, hedefler,
+  tekrarlar, istatistikler...) `userId` ile izole edilir. Dersler ve haftalık ders
+  programı tüm kullanıcılar için ortaktır.
 - **Genel Bakış:** Günlük özet, soru/süre ilerlemesi, program ilerlemesi, sınav geri
   sayımı, çalışma serisi, bugünkü tekrarlar, haftalık grafik, ders bazında ilerleme ve
   koç önerisi.
@@ -52,7 +58,7 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
    ```
 2. Ortam değişkenlerini ayarla (`.env`):
    ```env
-   DATABASE_URL=postgresql://USER:PASSWORD@127.0.0.1:5432/app_db
+   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/app_db
    # Yapay zekâ koçu (opsiyonel):
    OPENAI_API_KEY=...
    OPENAI_MODEL=gpt-4o-mini          # opsiyonel

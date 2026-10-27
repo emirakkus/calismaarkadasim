@@ -11,9 +11,12 @@ export type CoachContext = {
   openTasks: { title: string; subjectName: string; status: string }[];
 };
 
-export async function buildCoachContext(date: string): Promise<CoachContext> {
-  const summary = await getDailySummary(date);
-  const week = await getWeeklyStats(startOfWeek(date));
+export async function buildCoachContext(
+  userId: number,
+  date: string,
+): Promise<CoachContext> {
+  const summary = await getDailySummary(userId, date);
+  const week = await getWeeklyStats(userId, startOfWeek(date));
   const openTasks = await db
     .select({
       title: tasks.title,
@@ -22,7 +25,11 @@ export async function buildCoachContext(date: string): Promise<CoachContext> {
     })
     .from(tasks)
     .where(
-      and(eq(tasks.date, date), inArray(tasks.status, ["pending", "in_progress"])),
+      and(
+        eq(tasks.userId, userId),
+        eq(tasks.date, date),
+        inArray(tasks.status, ["pending", "in_progress"]),
+      ),
     );
   return { date, summary, week, openTasks };
 }

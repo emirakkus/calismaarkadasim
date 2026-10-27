@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { examSettings } from "@/db/schema";
-import { ensureSeed } from "@/lib/seed";
+import { getUserId, unauthorized } from "@/lib/auth";
+import { ensureUserData } from "@/lib/seed";
 import { ok, bad, serverError, asInt, isValidDate } from "@/lib/api";
 import { todayISO, fromISODate } from "@/lib/date";
 import { eq } from "drizzle-orm";
@@ -15,12 +16,10 @@ function daysUntil(dateStr: string): number {
 
 export async function GET() {
   try {
-    await ensureSeed();
-    const [row] = await db
-      .select()
-      .from(examSettings)
-      .where(eq(examSettings.id, 1))
-      .limit(1);
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+    await ensureUserData(userId);
+    const [row] = await db.select().from(examSettings).where(eq(examSettings.userId, userId)).limit(1);
     const examDate = row?.examDate ?? null;
     const daysLeft = examDate ? daysUntil(examDate as string) : null;
     return ok({ exam: row, daysLeft });
@@ -31,21 +30,18 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await ensureSeed();
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
+    await ensureUserData(userId);
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
 
     const update: Record<string, unknown> = { updatedAt: new Date() };
-    if (body.examName !== undefined)
-      update.examName = String(body.examName).slice(0, 80);
+    if (body.examName !== undefined) update.examName = String(body.examName).slice(0, 80);
     if (body.examDate !== undefined) {
-      if (body.examDate === null || body.examDate === "") {
-        update.examDate = null;
-      } else if (isValidDate(body.examDate)) {
-        update.examDate = body.examDate;
-      } else {
-        return bad("Geçerli bir sınav tarihi girin");
-      }
+      if (body.examDate === null || body.examDate === "") update.examDate = null;
+      else if (isValidDate(body.examDate)) update.examDate = body.examDate;
+      else return bad("Geçerli bir sınav tarihi girin");
     }
     if (body.weakThreshold !== undefined) {
       const t = asInt(body.weakThreshold);
@@ -53,12 +49,7 @@ export async function PUT(req: Request) {
       update.weakThreshold = t;
     }
 
-    const [row] = await db
-      .update(examSettings)
-      .set(update)
-      .where(eq(examSettings.id, 1))
-      .returning();
-
+    const [row] = await db.update(examSettings).set(update).where(eq(examSettings.userId, userId)).returning();
     const daysLeft = row?.examDate ? daysUntil(row.examDate as string) : null;
     return ok({ exam: row, daysLeft });
   } catch {

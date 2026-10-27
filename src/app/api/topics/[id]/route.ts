@@ -1,21 +1,19 @@
 import { db } from "@/db";
 import { topics } from "@/db/schema";
+import { getUserId, unauthorized } from "@/lib/auth";
 import { ok, bad, serverError, asInt } from "@/lib/api";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
-
 const TOPIC_STATUSES = ["pending", "in_progress", "completed"];
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
     const { id } = await params;
     const body = await req.json().catch(() => null);
     if (!body) return bad("Geçersiz istek");
-
     const update: Record<string, unknown> = { updatedAt: new Date() };
     if (body.name !== undefined) {
       const n = String(body.name).trim();
@@ -27,12 +25,7 @@ export async function PATCH(
       update.status = body.status;
     }
     if (body.orderIndex !== undefined) update.orderIndex = asInt(body.orderIndex);
-
-    const [updated] = await db
-      .update(topics)
-      .set(update)
-      .where(eq(topics.id, asInt(id)))
-      .returning();
+    const [updated] = await db.update(topics).set(update).where(and(eq(topics.id, asInt(id)), eq(topics.userId, userId))).returning();
     if (!updated) return bad("Konu bulunamadı", 404);
     return ok({ topic: updated });
   } catch {
@@ -40,16 +33,12 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
     const { id } = await params;
-    const [deleted] = await db
-      .delete(topics)
-      .where(eq(topics.id, asInt(id)))
-      .returning();
+    const [deleted] = await db.delete(topics).where(and(eq(topics.id, asInt(id)), eq(topics.userId, userId))).returning();
     if (!deleted) return bad("Konu bulunamadı", 404);
     return ok({ ok: true });
   } catch {
