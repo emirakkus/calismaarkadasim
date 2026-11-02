@@ -37,7 +37,7 @@ const GRID: Record<number, Cell[]> = {
   2: [
     { subject: "Geometri", teacher: "Serkan Doğan" },
     { subject: "Geometri", teacher: "Serkan Doğan" },
-    { subject: "Türkçe", teacher: "Ömer Ertekin" },
+    { subject: "Türkçe TYT", teacher: "Ömer Ertekin" },
     { subject: "Matematik AYT", teacher: "Mustafa Demir" },
     { subject: "Matematik AYT", teacher: "Mustafa Demir" },
     { subject: "Felsefe", teacher: "Ayşenur Cicili" },
@@ -48,7 +48,7 @@ const GRID: Record<number, Cell[]> = {
     { subject: "Tarih", teacher: "Gözde Orhan" },
     { subject: "Matematik TYT", teacher: "Cansu Sefer" },
     { subject: "Matematik TYT", teacher: "Cansu Sefer" },
-    { subject: "Türkçe", teacher: "Ömer Ertekin" },
+    { subject: "Türkçe TYT", teacher: "Ömer Ertekin" },
     { subject: "Matematik AYT", teacher: "Mustafa Demir" },
   ],
   // Perşembe
@@ -88,7 +88,7 @@ export function buildTimetable(): TimetableEntry[] {
 export function distinctSubjects(): { name: string; color: string }[] {
   const palette: Record<string, string> = {
     "Türk Dili ve Edebiyatı": "#db2777",
-    Türkçe: "#e11d48",
+    "Türkçe TYT": "#e11d48",
     Coğrafya: "#16a34a",
     "Matematik TYT": "#2563eb",
     "Matematik AYT": "#1d4ed8",

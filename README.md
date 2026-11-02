@@ -6,9 +6,9 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
 
 > **Veri kaynağı:** Uygulama, sağlanan **haftalık ders programı görselinden** birebir
 > çıkarılan ders/saat/öğretmen bilgisini kullanır (bkz. `src/lib/timetable.ts`).
-> Program görselinde **konu başlıkları** ve **soru hedefleri yer almadığından**,
-> bunlar uygulama tarafından **uydurulmaz**; Günlük Plan ve Soru Hedefleri
-> bölümlerinden kendin ekleyebilirsin.
+> Program görselinde **konu başlıkları** ve **soru hedefleri yer almaz**. Uygulama
+> YKS müfredatındaki ders ve konu listesini başlangıç verisi olarak sunar; kişisel
+> konu ve soru hedeflerini de Günlük Plan ve Soru Hedefleri bölümlerinden ekleyebilirsin.
 
 ## Özellikler
 
@@ -24,6 +24,8 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
 - **Günlük Plan:** Programdan otomatik görev oluşturma, manuel görev, tamamla/başla/
   ertele/sil, günlük hedef düzenleme, süre kaydı. Ertelenen görevler kaybolmaz.
 - **Dersler ve Konular:** Haftalık ders programı tablosu + ders bazlı konu yönetimi.
+- **Flashcard'lar:** Müfredattaki her konu için kısa bilgi kartları; derse göre filtreleme,
+  cevabı açma, kartlar arasında gezinme ve karıştırma.
 - **Soru Hedefleri:** Ders/konu bazında toplam/doğru/yanlış/boş girişi. Yalnızca toplam
   girildiğinde dağılım uydurulmaz. Kayıtlar düzenlenip silinebilir.
 - **Pomodoro:** Zaman damgası tabanlı sayaç (sekme/yenileme süreyi bozmaz), 25/5-50/10

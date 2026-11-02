@@ -21,6 +21,15 @@ describe("YKS EA curriculum seed", () => {
     ).toBe(topics.length);
   });
 
+  it("includes the TYT Turkish subject and its verbal logic topic", () => {
+    const turkish = YKS_EA_CURRICULUM.find(
+      (course) => course.subjectName === "Türkçe TYT",
+    );
+
+    expect(turkish).toBeDefined();
+    expect(turkish?.topics).toContain("Sözel Mantık");
+  });
+
   it("does not recreate topics that were already seeded", () => {
     const seededTopics = getMissingYksEaTopics([], subjects);
     const existing = seededTopics.map(({ subjectId, name, orderIndex }) => ({
@@ -48,7 +57,7 @@ describe("YKS EA curriculum seed", () => {
 
   it("fails explicitly when a curriculum subject is missing", () => {
     expect(() => getMissingYksEaTopics([], [])).toThrow(
-      "YKS müfredat dersi bulunamadı: Türkçe",
+      "YKS müfredat dersi bulunamadı: Türkçe TYT",
     );
   });
 });
