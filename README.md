@@ -24,8 +24,8 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
 - **Günlük Plan:** Programdan otomatik görev oluşturma, manuel görev, tamamla/başla/
   ertele/sil, günlük hedef düzenleme, süre kaydı. Ertelenen görevler kaybolmaz.
 - **Dersler ve Konular:** Haftalık ders programı tablosu + ders bazlı konu yönetimi.
-- **Flashcard'lar:** Müfredattaki her konu için kısa bilgi kartları; derse göre filtreleme,
-  cevabı açma, kartlar arasında gezinme ve karıştırma.
+- **Bilgi Kartları:** 268 TYT/AYT kartı; ders, konu ve zorluk filtresi; favoriler,
+  günlük 10 kart hedefi, kullanıcıya özel ilerleme ve aralıklı tekrar.
 - **Soru Hedefleri:** Ders/konu bazında toplam/doğru/yanlış/boş girişi. Yalnızca toplam
   girildiğinde dağılım uydurulmaz. Kayıtlar düzenlenip silinebilir.
 - **Pomodoro:** Zaman damgası tabanlı sayaç (sekme/yenileme süreyi bozmaz), 25/5-50/10
@@ -70,6 +70,10 @@ verilere dayalı bir yapay zekâ çalışma koçu sunar.
    ```bash
    npx drizzle-kit push
    ```
+   Mevcut Neon veritabanlarında `migrations/20261102_flashcards.sql`
+   migration'ını SQL Editor'da bir kez çalıştır. Bu migration bilgi kartları,
+   kullanıcı bazlı tekrar ilerlemesi, favoriler, günlük çalışma ve tekrar geçmişi
+   tablolarını ekler; var olan tablolara dokunmaz.
    Mevcut Neon veritabanlarında `migrations/20261027_yks_ea_curriculum.sql`
    migration'ını SQL Editor'da bir kez çalıştır. Bu migration, kullanıcı başına
    müfredat seed sürümünü takip eden kolonu ekler.

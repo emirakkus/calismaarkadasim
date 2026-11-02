@@ -2,27 +2,27 @@ import { YKS_EA_CURRICULUM } from "@/lib/yks-ea-curriculum";
 
 const FLASHCARD_ANSWERS: Record<string, readonly string[]> = {
   "Türkçe TYT": [
-    "Sözcüğün gerçek, yan ve mecaz anlamı cümledeki bağlama göre belirlenir.",
-    "Cümlede neden-sonuç, amaç-sonuç, koşul ve karşılaştırma ilişkilerini ara.",
-    "Ana düşünce yazarın paragraf boyunca savunduğu temel yargıdır.",
-    "Paragraf genellikle konuya giriş, açıklama ve sonuç bölümlerinden oluşur.",
-    "Sözel mantıkta verilen koşulları tabloya aktar; kesin olmayanı varsayma.",
-    "Ünlü uyumu, ünsüz benzeşmesi ve ses düşmesi başlıca ses olaylarıdır.",
-    "Bağlaç olan “de/da” ayrı; bulunma eki “-de/-da” bitişik yazılır.",
-    "Virgül eş görevli ögeleri, noktalı virgül grupları; iki nokta açıklamayı belirtir.",
-    "Yapım eki yeni sözcük türetir; çekim eki sözcüğün görevini veya biçimini değiştirir.",
-    "İsimler varlıkları karşılar; özel adlar büyük harfle başlar.",
-    "Sıfat, ismi niteler veya belirtir; yanında nitelediği ya da belirttiği isim bulunur.",
-    "Zamir, ismin yerini tutar; kişi, işaret, belgisiz ve soru türleri vardır.",
-    "Zarf; fiili, sıfatı veya başka bir zarfı zaman, durum, miktar ya da yer bakımından etkiler.",
-    "Edat tek başına anlam ilişkisi kurar; bağlaç eş görevli sözcükleri bağlar.",
-    "Fiiller iş, oluş veya durum bildirir; kip ve kişi eki alabilir.",
-    "Ek fiil isim soylu sözcükleri yüklem yapar ve birleşik zaman kurar.",
-    "Etken çatıda işi özne yapar; edilgen çatıda işi yapan belirtilmez.",
-    "Fiilimsi, fiilden türeyip cümlede isim, sıfat veya zarf görevinde kullanılan sözcüktür.",
-    "Cümlenin ögeleri yükleme sorulan uygun sorularla bulunur; önce yüklemi belirle.",
-    "Cümleler yüklemin türüne, yerine ve anlamına göre sınıflandırılır.",
-    "Anlatım bozukluğu; gereksiz sözcük, anlam çelişkisi veya dil bilgisi uyumsuzluğundan doğar.",
+    "Sözcüğün gerçek anlamı temel anlamıdır; yan anlam temel anlamla bağlantılı yeni kullanımdır, mecaz anlamda ise sözcük gerçek anlamından uzaklaşır. “Masanın ayağı” yan, “bu sözlere çok kırıldım” mecaz anlam örneğidir.",
+    "Neden-sonuçta gerçekleşmiş bir olayın nedeni verilir (“Yağmur yağdığı için ıslandık”); amaç-sonuçta hedef belirtilir (“Islanmamak için şemsiye aldı”); koşulda gerçekleşme bir şarta bağlıdır (“Düzenli çalışırsan başarırsın”).",
+    "Konu, paragrafın ne anlattığıdır; ana düşünce yazarın konu hakkında asıl savunduğu yargıdır. Ana düşünce çoğu zaman paragrafın tamamını kapsar, tek bir örneğe indirgenmez.",
+    "Paragrafta giriş bölümü konuyu tanıtır, gelişme düşünceyi örnek ve açıklamalarla açar, sonuç toparlar. Paragrafı tamamlarken önceki cümleyle anlam ve bağlaç uyumunu da kontrol et.",
+    "Sözel mantıkta kişi, gün veya sıra bilgilerini tabloya yerleştir; kesin koşulları önce uygula, olasılıkları ayrı ayrı dene. Verilmeyen bir bilgiyi kesinmiş gibi kabul etme.",
+    "Ünsüz benzeşmesi: sert ünsüzle biten sözcüğe c/d/g ile başlayan ek gelince ek sertleşir: kitap+cı → kitapçı. Ünsüz yumuşaması: p/ç/t/k, ünlüyle başlayan ek alınca çoğunlukla b/c/d/ğ olur: kitap+ı → kitabı. Ünlü düşmesi: burun+u → burnu.",
+    "Bağlaç olan “de/da” “dahi” anlamındadır, ayrı yazılır ve “te/ta” olmaz: “Ben de geldim.” Bulunma hâl eki bitişiktir ve ünsüz uyumuna girer: “evde”, “kitapta”. “Benimde” değil “benim de”; “Ankara'da” ise ek kesmeyle ayrılır.",
+    "Virgül eş görevli sözcükleri ve sıralı cümleleri ayırır; noktalı virgül, içinde virgül bulunan grupları ayırabilir. İki nokta açıklama veya örnekten önce, üç nokta tamamlanmamış anlatımda kullanılır. Özel adlara gelen çekim ekleri kesmeyle ayrılır: “Ankara'ya”.",
+    "Yapım eki yeni anlamlı sözcük türetir (“göz+lük”); çekim eki yeni sözcük türetmeden görev veya ilişki kurar (“ev+ler+imiz+de”). Yapım eki genellikle çekim eklerinden önce gelir.",
+    "İsimler varlık, kavram ve durumları karşılar; “kim, ne?” sorularına yanıt verir. Özel adlar büyük harfle başlar. Özel ada gelen çekim eki kesmeyle ayrılır (“Türkiye'nin”), yapım eki ayrılmaz (“Türkçenin”).",
+    "Sıfat ismi niteler veya belirtir ve genellikle isimden önce gelir (“eski kitap”, “üç öğrenci”). İsmin yerini tek başına tutarsa adlaşmış sıfat olur (“Çalışkanlar kazandı”). Niteleme sıfatı “nasıl?”, belirtme sıfatı “hangi, kaç, kaçıncı?” sorularına yanıt verir.",
+    "Zamir ismin yerini tutar: kişi (“ben”), işaret (“bunu”), belgisiz (“bazısı”), soru (“kim?”) ve dönüşlülük (“kendi”) zamirleri vardır. “Bu benim”de bu zamir, “bu kitap”ta isimle kullanıldığı için işaret sıfatıdır.",
+    "Zarf; fiili, sıfatı veya başka bir zarfı zaman (“dün geldi”), durum (“hızlı koştu”), miktar (“çok güzel”) ya da yer-yön (“içeri girdi”) bakımından etkiler. Yer-yön sözcüğü isim çekim eki alırsa zarf olmaktan çıkar: “dışarı çıktı / dışarıya çıktı”.",
+    "Edat tek başına tam bir anlam taşımaz, sözcükler arasında ilişki kurar (“senin için”). Bağlaç sözcükleri veya cümleleri bağlar (“Ali ve Ece”). “Yalnız” ve “ancak” gibi sözcüklerin türü cümledeki kullanımına göre değişebilir.",
+    "Fiiller iş (“yazdı”), oluş (“sarardı”) veya durum (“bekledi”) bildirir. Kip zaman ya da dilek anlamı, kişi eki işi yapanı gösterir. Fiilde kip ve kişi eklerini bulmak için önce fiil kökünü belirle.",
+    "Ek fiilin iki temel görevi vardır: isim soylu sözcükleri yüklem yapmak (“Hava güzeldi”) ve basit zamanlı fiile eklenerek birleşik zaman kurmak (“geliyordu”). Ek fiilin geniş zamanında “-im, -sin, -dir...” biçimleri görülebilir.",
+    "Etken çatıda özne işi yapar (“Çocuk camı kırdı”); edilgen çatıda işi yapan belli değildir, nesne özne görevine geçer (“Cam kırıldı”). Dönüşlü çatıda özne işi kendisi için yapar; işteş çatıda iş karşılıklı veya birlikte yapılır.",
+    "Fiilimsi, fiil kök veya gövdesinden türeyip cümlede isim, sıfat ya da zarf görevi alan sözcüktür; çekimli fiil değildir. İsim-fiil “-ma/-ış/-mak”, sıfat-fiil “-an/-ası/-mez...” ve zarf-fiil “-ken/-ince/-ip...” ekleriyle tanınabilir.",
+    "Ögeleri bulurken önce yüklemi belirle; sonra yükleme “kim/ne?” sorusuyla özneyi, “neyi/kimi?” ile belirtili nesneyi, “ne?” ile belirtisiz nesneyi sor. Yer tamlayıcısı “-e/-de/-den”, zarf tümleci ise zaman, durum, miktar veya neden bildirir.",
+    "Cümleler yüklemin türüne göre isim/fiil, yerine göre kurallı/devrik, anlamına göre olumlu/olumsuz/soru cümlesi olabilir. Bir cümle aynı anda bu ölçütlerin her birine göre ayrı ayrı sınıflandırılır.",
+    "Anlatım bozukluğunda gereksiz sözcüğü (“geri iade”), anlam çelişkisini (“kesinlikle olabilir”), yanlış sözcük seçimini ve özne-yüklem uyumsuzluğunu ara. “Yanlış” doğru yazımdır; “yalnış” yazım yanlışıdır. Cümleyi anlamı değişmeden gereksiz bölüm çıkarılabiliyor mu diye kontrol et.",
   ],
   "Matematik TYT": [
     "Sayı kümeleri doğal, tam, rasyonel, irrasyonel ve gerçek sayıları kapsar.",
@@ -265,24 +265,208 @@ const FLASHCARD_ANSWERS: Record<string, readonly string[]> = {
 };
 
 export type Flashcard = {
+  id: string;
+  examType: "TYT" | "AYT";
   subjectName: string;
   topicName: string;
   front: string;
   back: string;
+  question: string;
+  answer: string;
+  difficulty: "easy" | "medium" | "hard";
+  explanation: string;
 };
 
+const EXTRA_TURKISH_FLASHCARDS: {
+  subjectName: string;
+  topicName: string;
+  front: string;
+  back: string;
+}[] = [
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "Sınavlarda sık karıştırılan sözcükler nasıl yazılır?",
+    back: "“Her şey, bir şey, pek çok, art arda, yanı sıra, göz ardı” ayrı; “birçok, birkaç, hiçbir, gitgide, olağanüstü” bitişik yazılır. “Herkez” değil “herkes”, “yanlız” değil “yalnız”, “yalnış” değil “yanlış”, “traş” değil “tıraş” doğrudur.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "“De/da”nın bağlaç mı bulunma eki mi olduğunu nasıl ayırt edersin?",
+    back: "Bağlaç olan de/da cümleden çıkarılınca temel yapı bozulmaz ve “dahi” anlamı verir: “Ece de geldi.” Ayrı yazılır, ta/te biçimine dönüşmez. Bulunma eki sözcüğe bitişir ve sert ünsüz uyumuyla “-ta/-te” olabilir: “evde, ağaçta”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "“Ki” ne zaman ayrı, ne zaman bitişik yazılır?",
+    back: "Bağlaç olan ki ayrı yazılır: “Duydum ki sınav ertelenmiş.” Bir isme bağlı ilgi eki veya sıfat yapan ek olan -ki bitişiktir: “onunki, sınıftaki öğrenciler”. Kalıplaşmış “belki, çünkü, sanki, oysaki, hâlbuki, mademki, meğerki” bitişik yazılır.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "Soru eki “mı/mi” ve sonrasındaki ekler nasıl yazılır?",
+    back: "Soru eki kendinden önceki sözcükten ayrı yazılır: “Beni duydun mu?” Kişi veya zaman eki soru ekine bitişir: “Gelecek misiniz?”, “Biliyor muydu?”, “Güzel miydi?” Soru eki cümleye soru anlamı katmasa da ayrı yazılır.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "Birleşik fiillerde bitişik ve ayrı yazım nasıl ayırt edilir?",
+    back: "Ses düşmesi veya türemesi varsa genellikle bitişik yazılır: “hissetmek, affetmek, reddetmek”. Ses olayı yoksa yardımcı fiil ayrı yazılır: “yardım etmek, fark etmek, terk etmek”. Birleşik fiili yazarken söylenişteki ses değişimine dikkat et.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Noktalama İşaretleri",
+    front: "Virgül, noktalı virgül ve iki nokta hangi durumlarda karıştırılır?",
+    back: "Virgül eş görevli sözcükleri ve sıralı cümleleri ayırır. Noktalı virgül, içinde virgül bulunan grupları birbirinden ayırmada kullanılır. İki nokta, ardından örnek veya açıklama verilecek ifadeden sonra gelir: “Üç şey al: kalem, defter, silgi.”",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Noktalama İşaretleri",
+    front: "Kesme işareti özel adlara gelen her ekte kullanılır mı?",
+    back: "Özel adlara gelen çekim ekleri kesmeyle ayrılır: “Ankara'ya”, “Ayşe'nin”. Yapım ekleri ve bunlardan sonra gelen ekler ayrılmaz: “Türkçenin”, “İstanbullu”. Kurum ve kuruluş adlarına gelen ekler de genel olarak kesmeyle ayrılmaz: “Türk Dil Kurumuna”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Ses Bilgisi",
+    front: "Ünsüz benzeşmesi ile ünsüz yumuşaması nasıl ayırt edilir?",
+    back: "Ünsüz benzeşmesinde sert ünsüzle biten sözcüğe gelen c/d/g, ç/t/k'ye dönüşür: “kitapçı, sınıfta”. Ünsüz yumuşamasında p/ç/t/k ile biten sözcük ünlüyle başlayan ek alınca çoğunlukla b/c/d/ğ olur: “kitabı, ağacı, kanadı, çocuğu”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Ses Bilgisi",
+    front: "Ünlü düşmesi ve ünlü daralmasına örnek ver.",
+    back: "İki heceli bazı sözcükler ünlüyle başlayan ek alınca orta hecedeki dar ünlüyü düşürür: “burun-u → burnu”, “ağız-ı → ağzı”. “-yor” eki, a/e ünlüsünü daraltabilir: “başla-yor → başlıyor”, “bekle-yor → bekliyor”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Anlatım Bozuklukları",
+    front: "Sık görülen sözcük ve anlatım yanlışlarını nasıl yakalarsın?",
+    back: "Gereksiz sözcük kullanımını (“geri iade”), anlamca çelişen sözleri (“kesinlikle olabilir”), yanlış sözcük seçimini ve özne-yüklem uyumsuzluğunu kontrol et. “Yanlış” doğru yazımdır; “yalnış” yazım yanlışıdır. Cümleyi anlamı değişmeden gereksiz bölüm çıkarılabiliyor mu diye gözden geçir.",
+  },
+];
+
+const ADDITIONAL_AYT_FLASHCARDS = [
+  ["Geometri", "Çemberde Açılar", "AYT çemberde çevre açı ile merkez açı arasındaki ilişki nedir?", "Aynı yayı gören çevre açının ölçüsü, merkez açının yarısıdır. Aynı yayı gören çevre açılar birbirine eşittir.", "medium"],
+  ["Geometri", "Analitik Geometri", "İki doğrunun paralel olduğunu eğimlerinden nasıl anlarsın?", "Dikey olmayan iki doğrunun eğimleri eşitse doğrular paraleldir veya çakışıktır. Farklı y-kesişimleri varsa paraleldir.", "medium"],
+  ["Fizik", "Vektörler", "Vektörlerin bileşkesi hangi yöntemlerle bulunur?", "Aynı doğrultudaki vektörler yönlerine göre toplanıp çıkarılır. Farklı doğrultularda uç uca ekleme veya paralelkenar yöntemi kullanılır.", "medium"],
+  ["Fizik", "Elektriksel Alan", "Elektrik alanın yönü pozitif deneme yüküne göre nasıl tanımlanır?", "Bir noktadaki elektrik alanın yönü, o noktaya konan pozitif deneme yüküne etki eden kuvvet yönüdür. Alan çizgileri pozitif yükten çıkar, negatif yüke girer.", "medium"],
+  ["Kimya", "Tepkime Hızı", "Bir kimyasal tepkimenin hızını artıran çarpışma koşulları nelerdir?", "Sıcaklığı, derişimi veya gazlarda basıncı artırmak etkili çarpışmaları çoğaltabilir. Katalizör aktivasyon enerjisini düşürür; tepkime sonunda harcanmaz.", "medium"],
+  ["Kimya", "Kimyasal Denge", "Dengedeki sisteme sıcaklık değişimi uygulanırsa denge nasıl etkilenir?", "Sistem sıcaklık değişimini azaltacak yöne kayar: sıcaklık artışı endotermik yönü, azalış ekzotermik yönü destekler. Denge sabiti yalnız sıcaklıkla değişir.", "hard"],
+  ["Biyoloji", "Fotosentez", "Fotosentezde ışığa bağımlı tepkimeler nerede gerçekleşir ve ne üretir?", "Kloroplastın tilakoit zarlarında gerçekleşir; ışık enerjisiyle ATP ve NADPH üretilir, suyun parçalanmasıyla oksijen açığa çıkar.", "medium"],
+  ["Biyoloji", "Hücresel Solunum", "Oksijenli solunumda glikozun parçalanması hücreye ne kazandırır?", "Glikoz basamaklar hâlinde oksitlenir; elektron taşıma sistemi oksijen kullanarak ATP üretir. Karbondioksit ve su son ürünler arasındadır.", "medium"],
+  ["Tarih-1", "Osmanlı Kültür ve Medeniyeti", "Osmanlı klasik dönem yönetiminde Divan-ı Hümayun ne iş yapardı?", "Divan-ı Hümayun, devlet işlerinin görüşüldüğü ve karara bağlandığı merkezî yönetim kuruluydu. Padişahın mutlak karar yetkisi devam ederdi.", "medium"],
+  ["Tarih-1", "Millî Mücadele", "Amasya Genelgesi'nin Millî Mücadele açısından önemi nedir?", "“Milletin bağımsızlığını yine milletin azim ve kararı kurtaracaktır” ilkesiyle millî irade vurgulanmış, mücadelenin gerekçesi ve yöntemi açıklanmıştır.", "medium"],
+  ["Coğrafya-1", "Türkiye'de Nüfus", "Türkiye'de nüfusun kıyı ve sanayi şehirlerinde yoğunlaşmasının başlıca nedenleri nelerdir?", "İş olanakları, ulaşım, ticaret, hizmetler ve elverişli yaşam koşulları göçü çeker. Yer şekilleri ve iklim de yerleşme yoğunluğunu etkiler.", "easy"],
+  ["Coğrafya-1", "Türkiye'de Ekonomi", "Türkiye'de tarımsal ürünlerin dağılışında hangi doğal koşullar belirleyicidir?", "Sıcaklık, yağış, yükselti, toprak ve sulama imkânı ürün desenini etkiler. Pazar, ulaşım ve tarım teknolojisi de üretimi biçimlendirir.", "medium"],
+  ["Tarih-2", "20. Yüzyıl Başlarında Dünya", "I. Dünya Savaşı sonrasında kurulan Milletler Cemiyeti'nin temel amacı neydi?", "Devletler arası sorunları diplomasiyle çözmek ve yeni bir dünya savaşını önlemek amacıyla kuruldu; yaptırım ve katılım sorunları etkinliğini sınırladı.", "medium"],
+  ["Tarih-2", "Soğuk Savaş", "Soğuk Savaş döneminde iki kutuplu dünya düzenini hangi güçler oluşturdu?", "ABD öncülüğündeki Batı bloku ile SSCB öncülüğündeki Doğu bloku siyasi, askerî ve ekonomik alanlarda rekabet etti.", "easy"],
+  ["Coğrafya-2", "Küresel ve Bölgesel Örgütler", "Küreselleşme ülkeler arasındaki ekonomik ilişkileri nasıl etkiler?", "Üretim, ticaret, sermaye ve bilgi akışını ülke sınırlarının ötesinde yoğunlaştırır; karşılıklı bağımlılıkla birlikte fırsat ve kırılganlıkları da artırabilir.", "medium"],
+  ["Coğrafya-2", "Çevre ve Toplum", "İklim değişikliği ile küresel ısınma aynı kavram mıdır?", "Küresel ısınma, uzun dönemli ortalama sıcaklık artışıdır. İklim değişikliği sıcaklık, yağış ve aşırı olaylardaki daha geniş ve uzun süreli değişimleri kapsar.", "easy"],
+  ["Felsefe Grubu", "Psikoloji", "Psikolojide gözlem ile deney arasındaki temel fark nedir?", "Gözlem davranışı doğal akışında kaydeder; deneyde araştırmacı bir değişkeni kontrollü biçimde değiştirip etkisini inceler.", "medium"],
+  ["Felsefe Grubu", "Sosyoloji", "Toplumsal norm ile toplumsal değer arasındaki fark nedir?", "Değerler toplumca önemli görülen genel ilkelerdir; normlar bu değerlere göre beklenen somut davranış kurallarıdır.", "easy"],
+  ["Felsefe Grubu", "Mantık", "Tümdengelim ve tümevarım akıl yürütmeleri nasıl ayrılır?", "Tümdengelim genelden tekil sonuca gider ve öncüller doğruysa sonuç zorunludur. Tümevarım tekil gözlemlerden genel sonuca ulaşır; sonuç olasılıklıdır.", "medium"],
+  ["Din Kültürü", "İslam ve İbadet", "İslam'da farz ile sünnet arasındaki temel fark nedir?", "Farz, dinen kesin biçimde yapılması istenen görevdir. Sünnet, Hz. Muhammed'in söz, davranış ve onaylarıyla örnek olan uygulamalardır.", "easy"],
+  ["Din Kültürü", "Ahlaki Tutum ve Davranışlar", "Kul hakkı kavramı hangi sorumluluğa dikkat çeker?", "Başkasının maddi veya manevi hakkını gözetmeyi ve ihlal edilen hakkı telafi etmeyi gerektirir; yalnız kişisel ibadetle giderilmiş sayılmaz.", "medium"],
+] as const;
+
 export function getFlashcards(): Flashcard[] {
-  return YKS_EA_CURRICULUM.flatMap((course) => {
+  const curriculumCards = YKS_EA_CURRICULUM.flatMap((course) => {
     const answers = FLASHCARD_ANSWERS[course.subjectName];
     if (!answers || answers.length !== course.topics.length) {
       throw new Error(`Flashcard içeriği eksik veya hatalı: ${course.subjectName}`);
     }
 
-    return course.topics.map((topicName, index) => ({
-      subjectName: course.subjectName,
+    return course.topics.map((topicName, index) => createCard({
+      examType: getExamType(course.subjectName),
+      subjectName: getDisplaySubject(course.subjectName),
       topicName,
-      front: `${topicName} konusunda hatırlanması gereken temel bilgi nedir?`,
-      back: answers[index],
+      question: `${topicName} konusunda hatırlanması gereken temel kural nedir?`,
+      answer: answers[index],
+      difficulty: getDifficulty(topicName),
     }));
   });
+
+  return [
+    ...curriculumCards,
+    ...EXTRA_TURKISH_FLASHCARDS.map((card) =>
+      createCard({
+        examType: "TYT",
+        subjectName: getDisplaySubject(card.subjectName),
+        topicName: card.topicName,
+        question: card.front,
+        answer: card.back,
+        difficulty: "medium",
+      }),
+    ),
+    ...ADDITIONAL_AYT_FLASHCARDS.map(([subjectName, topicName, question, answer, difficulty]) =>
+      createCard({
+        examType: "AYT",
+        subjectName,
+        topicName,
+        question,
+        answer,
+        difficulty,
+      }),
+    ),
+  ];
+}
+
+function createCard({
+  examType,
+  subjectName,
+  topicName,
+  question,
+  answer,
+  difficulty,
+}: {
+  examType: "TYT" | "AYT";
+  subjectName: string;
+  topicName: string;
+  question: string;
+  answer: string;
+  difficulty: "easy" | "medium" | "hard";
+}): Flashcard {
+  const id = `${examType}-${subjectName}-${topicName}-${question}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return {
+    id,
+    examType,
+    subjectName,
+    topicName,
+    front: question,
+    back: answer,
+    question,
+    answer,
+    difficulty,
+    explanation: answer,
+  };
+}
+
+function getExamType(subjectName: string): "TYT" | "AYT" {
+  return subjectName === "Matematik AYT" || subjectName === "Türk Dili ve Edebiyatı"
+    ? "AYT"
+    : "TYT";
+}
+
+function getDisplaySubject(subjectName: string): string {
+  if (subjectName === "Matematik AYT" || subjectName === "Matematik TYT") {
+    return "Matematik";
+  }
+  if (subjectName === "Türk Dili ve Edebiyatı") return "Edebiyat";
+  if (subjectName === "Türkçe TYT") return "Türkçe";
+  if (subjectName === "Din Kültürü ve Ahlak Bilgisi") return "Din Kültürü";
+  return subjectName;
+}
+
+function getDifficulty(topicName: string): "easy" | "medium" | "hard" {
+  if (/limit|türev|integral|denge|analitik|olasılık|fonksiyon/i.test(topicName)) {
+    return "hard";
+  }
+  if (/anlam|giriş|temel|özellik|bilgi/i.test(topicName)) return "easy";
+  return "medium";
 }

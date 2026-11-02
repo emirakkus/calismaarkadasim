@@ -6,6 +6,7 @@ import {
   boolean,
   timestamp,
   date,
+  index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -371,6 +372,114 @@ export const energyLogs = pgTable("energy_logs", {
   note: text("note"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// Ortak içerik kataloğu; kullanıcıların çalışma kayıtlarından bağımsızdır.
+export const flashcards = pgTable("flashcards", {
+  id: text("id").primaryKey(),
+  examType: text("exam_type").notNull(),
+  subjectName: text("subject_name").notNull(),
+  topicName: text("topic_name").notNull(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  explanation: text("explanation").notNull(),
+  difficulty: text("difficulty").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const flashcardProgress = pgTable(
+  "flashcard_progress",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("new"),
+    intervalDays: integer("interval_days").notNull().default(0),
+    repetitions: integer("repetitions").notNull().default(0),
+    dueDate: date("due_date"),
+    lastReviewedAt: timestamp("last_reviewed_at"),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userCardIdx: uniqueIndex("flashcard_progress_user_card_idx").on(
+      table.userId,
+      table.cardId,
+    ),
+    userDueIdx: index("flashcard_progress_user_due_idx").on(
+      table.userId,
+      table.dueDate,
+    ),
+  }),
+);
+
+export const flashcardFavorites = pgTable(
+  "flashcard_favorites",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userCardIdx: uniqueIndex("flashcard_favorites_user_card_idx").on(
+      table.userId,
+      table.cardId,
+    ),
+  }),
+);
+
+export const flashcardDailyStudy = pgTable(
+  "flashcard_daily_study",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    studyDate: date("study_date").notNull(),
+    rating: text("rating").notNull(),
+    reviewedAt: timestamp("reviewed_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userDateCardIdx: uniqueIndex("flashcard_daily_study_user_date_card_idx").on(
+      table.userId,
+      table.studyDate,
+      table.cardId,
+    ),
+  }),
+);
+
+export const flashcardReviewHistory = pgTable(
+  "flashcard_review_history",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    rating: text("rating").notNull(),
+    intervalDays: integer("interval_days").notNull(),
+    reviewedAt: timestamp("reviewed_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userCardDateIdx: index("flashcard_review_history_user_card_idx").on(
+      table.userId,
+      table.cardId,
+      table.reviewedAt,
+    ),
+  }),
+);
 
 export type Settings = typeof settings.$inferSelect;
 export type CoachMessage = typeof coachMessages.$inferSelect;
