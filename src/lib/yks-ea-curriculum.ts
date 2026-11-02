@@ -1,4 +1,4 @@
-export const YKS_EA_CURRICULUM_VERSION = 1;
+export const YKS_EA_CURRICULUM_VERSION = 2;
 
 export const YKS_EA_SUBJECTS = [
   { name: "Fizik", color: "#7c3aed" },
@@ -9,12 +9,13 @@ export const YKS_EA_SUBJECTS = [
 
 export const YKS_EA_CURRICULUM = [
   {
-    subjectName: "Türkçe",
+    subjectName: "Türkçe TYT",
     topics: [
       "Sözcükte Anlam",
       "Cümlede Anlam",
       "Paragrafta Anlam",
       "Paragrafın Yapısı",
+      "Sözel Mantık",
       "Ses Bilgisi",
       "Yazım Kuralları",
       "Noktalama İşaretleri",

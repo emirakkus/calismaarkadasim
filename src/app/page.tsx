@@ -11,6 +11,7 @@ import QuestionGoals from "@/components/QuestionGoals";
 import Stats from "@/components/Stats";
 import Coach from "@/components/Coach";
 import SubjectsTopics from "@/components/SubjectsTopics";
+import Flashcards from "@/components/Flashcards";
 import Reminders from "@/components/Reminders";
 import SettingsPanel from "@/components/SettingsPanel";
 import Pomodoro from "@/components/Pomodoro";
@@ -43,6 +44,7 @@ type Tab =
   | "dashboard"
   | "plan"
   | "subjects"
+  | "flashcards"
   | "questions"
   | "pomodoro"
   | "reviews"
@@ -60,6 +62,7 @@ const NAV: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Genel Bakış", icon: <HomeIcon className="h-5 w-5" /> },
   { id: "plan", label: "Günlük Plan", icon: <CalendarIcon className="h-5 w-5" /> },
   { id: "subjects", label: "Dersler ve Konular", icon: <BookIcon className="h-5 w-5" /> },
+  { id: "flashcards", label: "Flashcard'lar", icon: <RepeatIcon className="h-5 w-5" /> },
   { id: "questions", label: "Soru Hedefleri", icon: <QuestionIcon className="h-5 w-5" /> },
   { id: "pomodoro", label: "Pomodoro", icon: <TimerIcon className="h-5 w-5" /> },
   { id: "reviews", label: "Tekrar Merkezi", icon: <RepeatIcon className="h-5 w-5" /> },
@@ -77,6 +80,7 @@ const TAB_TITLES: Record<Tab, string> = {
   dashboard: "Genel Bakış",
   plan: "Günlük Plan",
   subjects: "Dersler ve Konular",
+  flashcards: "Flashcard'lar",
   questions: "Soru Hedefleri",
   pomodoro: "Pomodoro",
   reviews: "Tekrar Merkezi",
@@ -459,6 +463,7 @@ export default function Page() {
             <QuestionGoals day={day} date={date} subjects={subjects} onRefresh={refresh} toast={toast} />
           )}
           {tab === "subjects" && <SubjectsTopics toast={toast} />}
+          {tab === "flashcards" && <Flashcards />}
           {tab === "pomodoro" && (
             <Pomodoro
               key={authUser.id}

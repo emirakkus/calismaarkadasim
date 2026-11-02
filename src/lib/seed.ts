@@ -25,6 +25,23 @@ export const DEFAULT_EXAM_DATE = "2027-06-19";
 export async function ensureGlobalSeed(): Promise<void> {
   if (globalSeeded) return;
 
+  const existingSubjects = await db
+    .select({ name: subjects.name })
+    .from(subjects);
+  const hasLegacyTurkish = existingSubjects.some((subject) => subject.name === "Türkçe");
+  const hasTytTurkish = existingSubjects.some((subject) => subject.name === "Türkçe TYT");
+
+  if (hasLegacyTurkish && !hasTytTurkish) {
+    await db
+      .update(subjects)
+      .set({ name: "Türkçe TYT" })
+      .where(eq(subjects.name, "Türkçe"));
+  }
+  await db
+    .update(scheduleSlots)
+    .set({ subjectName: "Türkçe TYT" })
+    .where(eq(scheduleSlots.subjectName, "Türkçe"));
+
   const subs = [
     ...distinctSubjects(),
     { name: "Paragraf", color: "#0d9488" },

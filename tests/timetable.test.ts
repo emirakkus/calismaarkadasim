@@ -27,6 +27,7 @@ describe("ders programı", () => {
   it("programdaki tüm dersleri benzersiz çıkarır", () => {
     const subs = distinctSubjects().map((s) => s.name);
     expect(subs).toContain("Matematik TYT");
+    expect(subs).toContain("Türkçe TYT");
     expect(subs).toContain("Matematik AYT");
     expect(subs).toContain("Geometri");
     expect(subs).toContain("Rehberlik");
