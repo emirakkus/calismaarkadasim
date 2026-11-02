@@ -62,7 +62,7 @@ const NAV: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Genel Bakış", icon: <HomeIcon className="h-5 w-5" /> },
   { id: "plan", label: "Günlük Plan", icon: <CalendarIcon className="h-5 w-5" /> },
   { id: "subjects", label: "Dersler ve Konular", icon: <BookIcon className="h-5 w-5" /> },
-  { id: "flashcards", label: "Flashcard'lar", icon: <RepeatIcon className="h-5 w-5" /> },
+  { id: "flashcards", label: "Bilgi Kartları", icon: <RepeatIcon className="h-5 w-5" /> },
   { id: "questions", label: "Soru Hedefleri", icon: <QuestionIcon className="h-5 w-5" /> },
   { id: "pomodoro", label: "Pomodoro", icon: <TimerIcon className="h-5 w-5" /> },
   { id: "reviews", label: "Tekrar Merkezi", icon: <RepeatIcon className="h-5 w-5" /> },
@@ -80,7 +80,7 @@ const TAB_TITLES: Record<Tab, string> = {
   dashboard: "Genel Bakış",
   plan: "Günlük Plan",
   subjects: "Dersler ve Konular",
-  flashcards: "Flashcard'lar",
+  flashcards: "Bilgi Kartları",
   questions: "Soru Hedefleri",
   pomodoro: "Pomodoro",
   reviews: "Tekrar Merkezi",
@@ -463,7 +463,7 @@ export default function Page() {
             <QuestionGoals day={day} date={date} subjects={subjects} onRefresh={refresh} toast={toast} />
           )}
           {tab === "subjects" && <SubjectsTopics toast={toast} />}
-          {tab === "flashcards" && <Flashcards />}
+          {tab === "flashcards" && <Flashcards toast={toast} />}
           {tab === "pomodoro" && (
             <Pomodoro
               key={authUser.id}

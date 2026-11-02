@@ -265,13 +265,24 @@ const FLASHCARD_ANSWERS: Record<string, readonly string[]> = {
 };
 
 export type Flashcard = {
+  id: string;
+  examType: "TYT" | "AYT";
   subjectName: string;
   topicName: string;
   front: string;
   back: string;
+  question: string;
+  answer: string;
+  difficulty: "easy" | "medium" | "hard";
+  explanation: string;
 };
 
-const EXTRA_TURKISH_FLASHCARDS: Flashcard[] = [
+const EXTRA_TURKISH_FLASHCARDS: {
+  subjectName: string;
+  topicName: string;
+  front: string;
+  back: string;
+}[] = [
   {
     subjectName: "Türkçe TYT",
     topicName: "Yazım Kuralları",
@@ -334,6 +345,30 @@ const EXTRA_TURKISH_FLASHCARDS: Flashcard[] = [
   },
 ];
 
+const ADDITIONAL_AYT_FLASHCARDS = [
+  ["Geometri", "Çemberde Açılar", "AYT çemberde çevre açı ile merkez açı arasındaki ilişki nedir?", "Aynı yayı gören çevre açının ölçüsü, merkez açının yarısıdır. Aynı yayı gören çevre açılar birbirine eşittir.", "medium"],
+  ["Geometri", "Analitik Geometri", "İki doğrunun paralel olduğunu eğimlerinden nasıl anlarsın?", "Dikey olmayan iki doğrunun eğimleri eşitse doğrular paraleldir veya çakışıktır. Farklı y-kesişimleri varsa paraleldir.", "medium"],
+  ["Fizik", "Vektörler", "Vektörlerin bileşkesi hangi yöntemlerle bulunur?", "Aynı doğrultudaki vektörler yönlerine göre toplanıp çıkarılır. Farklı doğrultularda uç uca ekleme veya paralelkenar yöntemi kullanılır.", "medium"],
+  ["Fizik", "Elektriksel Alan", "Elektrik alanın yönü pozitif deneme yüküne göre nasıl tanımlanır?", "Bir noktadaki elektrik alanın yönü, o noktaya konan pozitif deneme yüküne etki eden kuvvet yönüdür. Alan çizgileri pozitif yükten çıkar, negatif yüke girer.", "medium"],
+  ["Kimya", "Tepkime Hızı", "Bir kimyasal tepkimenin hızını artıran çarpışma koşulları nelerdir?", "Sıcaklığı, derişimi veya gazlarda basıncı artırmak etkili çarpışmaları çoğaltabilir. Katalizör aktivasyon enerjisini düşürür; tepkime sonunda harcanmaz.", "medium"],
+  ["Kimya", "Kimyasal Denge", "Dengedeki sisteme sıcaklık değişimi uygulanırsa denge nasıl etkilenir?", "Sistem sıcaklık değişimini azaltacak yöne kayar: sıcaklık artışı endotermik yönü, azalış ekzotermik yönü destekler. Denge sabiti yalnız sıcaklıkla değişir.", "hard"],
+  ["Biyoloji", "Fotosentez", "Fotosentezde ışığa bağımlı tepkimeler nerede gerçekleşir ve ne üretir?", "Kloroplastın tilakoit zarlarında gerçekleşir; ışık enerjisiyle ATP ve NADPH üretilir, suyun parçalanmasıyla oksijen açığa çıkar.", "medium"],
+  ["Biyoloji", "Hücresel Solunum", "Oksijenli solunumda glikozun parçalanması hücreye ne kazandırır?", "Glikoz basamaklar hâlinde oksitlenir; elektron taşıma sistemi oksijen kullanarak ATP üretir. Karbondioksit ve su son ürünler arasındadır.", "medium"],
+  ["Tarih-1", "Osmanlı Kültür ve Medeniyeti", "Osmanlı klasik dönem yönetiminde Divan-ı Hümayun ne iş yapardı?", "Divan-ı Hümayun, devlet işlerinin görüşüldüğü ve karara bağlandığı merkezî yönetim kuruluydu. Padişahın mutlak karar yetkisi devam ederdi.", "medium"],
+  ["Tarih-1", "Millî Mücadele", "Amasya Genelgesi'nin Millî Mücadele açısından önemi nedir?", "“Milletin bağımsızlığını yine milletin azim ve kararı kurtaracaktır” ilkesiyle millî irade vurgulanmış, mücadelenin gerekçesi ve yöntemi açıklanmıştır.", "medium"],
+  ["Coğrafya-1", "Türkiye'de Nüfus", "Türkiye'de nüfusun kıyı ve sanayi şehirlerinde yoğunlaşmasının başlıca nedenleri nelerdir?", "İş olanakları, ulaşım, ticaret, hizmetler ve elverişli yaşam koşulları göçü çeker. Yer şekilleri ve iklim de yerleşme yoğunluğunu etkiler.", "easy"],
+  ["Coğrafya-1", "Türkiye'de Ekonomi", "Türkiye'de tarımsal ürünlerin dağılışında hangi doğal koşullar belirleyicidir?", "Sıcaklık, yağış, yükselti, toprak ve sulama imkânı ürün desenini etkiler. Pazar, ulaşım ve tarım teknolojisi de üretimi biçimlendirir.", "medium"],
+  ["Tarih-2", "20. Yüzyıl Başlarında Dünya", "I. Dünya Savaşı sonrasında kurulan Milletler Cemiyeti'nin temel amacı neydi?", "Devletler arası sorunları diplomasiyle çözmek ve yeni bir dünya savaşını önlemek amacıyla kuruldu; yaptırım ve katılım sorunları etkinliğini sınırladı.", "medium"],
+  ["Tarih-2", "Soğuk Savaş", "Soğuk Savaş döneminde iki kutuplu dünya düzenini hangi güçler oluşturdu?", "ABD öncülüğündeki Batı bloku ile SSCB öncülüğündeki Doğu bloku siyasi, askerî ve ekonomik alanlarda rekabet etti.", "easy"],
+  ["Coğrafya-2", "Küresel ve Bölgesel Örgütler", "Küreselleşme ülkeler arasındaki ekonomik ilişkileri nasıl etkiler?", "Üretim, ticaret, sermaye ve bilgi akışını ülke sınırlarının ötesinde yoğunlaştırır; karşılıklı bağımlılıkla birlikte fırsat ve kırılganlıkları da artırabilir.", "medium"],
+  ["Coğrafya-2", "Çevre ve Toplum", "İklim değişikliği ile küresel ısınma aynı kavram mıdır?", "Küresel ısınma, uzun dönemli ortalama sıcaklık artışıdır. İklim değişikliği sıcaklık, yağış ve aşırı olaylardaki daha geniş ve uzun süreli değişimleri kapsar.", "easy"],
+  ["Felsefe Grubu", "Psikoloji", "Psikolojide gözlem ile deney arasındaki temel fark nedir?", "Gözlem davranışı doğal akışında kaydeder; deneyde araştırmacı bir değişkeni kontrollü biçimde değiştirip etkisini inceler.", "medium"],
+  ["Felsefe Grubu", "Sosyoloji", "Toplumsal norm ile toplumsal değer arasındaki fark nedir?", "Değerler toplumca önemli görülen genel ilkelerdir; normlar bu değerlere göre beklenen somut davranış kurallarıdır.", "easy"],
+  ["Felsefe Grubu", "Mantık", "Tümdengelim ve tümevarım akıl yürütmeleri nasıl ayrılır?", "Tümdengelim genelden tekil sonuca gider ve öncüller doğruysa sonuç zorunludur. Tümevarım tekil gözlemlerden genel sonuca ulaşır; sonuç olasılıklıdır.", "medium"],
+  ["Din Kültürü", "İslam ve İbadet", "İslam'da farz ile sünnet arasındaki temel fark nedir?", "Farz, dinen kesin biçimde yapılması istenen görevdir. Sünnet, Hz. Muhammed'in söz, davranış ve onaylarıyla örnek olan uygulamalardır.", "easy"],
+  ["Din Kültürü", "Ahlaki Tutum ve Davranışlar", "Kul hakkı kavramı hangi sorumluluğa dikkat çeker?", "Başkasının maddi veya manevi hakkını gözetmeyi ve ihlal edilen hakkı telafi etmeyi gerektirir; yalnız kişisel ibadetle giderilmiş sayılmaz.", "medium"],
+] as const;
+
 export function getFlashcards(): Flashcard[] {
   const curriculumCards = YKS_EA_CURRICULUM.flatMap((course) => {
     const answers = FLASHCARD_ANSWERS[course.subjectName];
@@ -341,13 +376,97 @@ export function getFlashcards(): Flashcard[] {
       throw new Error(`Flashcard içeriği eksik veya hatalı: ${course.subjectName}`);
     }
 
-    return course.topics.map((topicName, index) => ({
-      subjectName: course.subjectName,
+    return course.topics.map((topicName, index) => createCard({
+      examType: getExamType(course.subjectName),
+      subjectName: getDisplaySubject(course.subjectName),
       topicName,
-      front: `${topicName} konusunda hatırlanması gereken temel bilgi nedir?`,
-      back: answers[index],
+      question: `${topicName} konusunda hatırlanması gereken temel kural nedir?`,
+      answer: answers[index],
+      difficulty: getDifficulty(topicName),
     }));
   });
 
-  return [...curriculumCards, ...EXTRA_TURKISH_FLASHCARDS];
+  return [
+    ...curriculumCards,
+    ...EXTRA_TURKISH_FLASHCARDS.map((card) =>
+      createCard({
+        examType: "TYT",
+        subjectName: getDisplaySubject(card.subjectName),
+        topicName: card.topicName,
+        question: card.front,
+        answer: card.back,
+        difficulty: "medium",
+      }),
+    ),
+    ...ADDITIONAL_AYT_FLASHCARDS.map(([subjectName, topicName, question, answer, difficulty]) =>
+      createCard({
+        examType: "AYT",
+        subjectName,
+        topicName,
+        question,
+        answer,
+        difficulty,
+      }),
+    ),
+  ];
+}
+
+function createCard({
+  examType,
+  subjectName,
+  topicName,
+  question,
+  answer,
+  difficulty,
+}: {
+  examType: "TYT" | "AYT";
+  subjectName: string;
+  topicName: string;
+  question: string;
+  answer: string;
+  difficulty: "easy" | "medium" | "hard";
+}): Flashcard {
+  const id = `${examType}-${subjectName}-${topicName}-${question}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return {
+    id,
+    examType,
+    subjectName,
+    topicName,
+    front: question,
+    back: answer,
+    question,
+    answer,
+    difficulty,
+    explanation: answer,
+  };
+}
+
+function getExamType(subjectName: string): "TYT" | "AYT" {
+  return subjectName === "Matematik AYT" || subjectName === "Türk Dili ve Edebiyatı"
+    ? "AYT"
+    : "TYT";
+}
+
+function getDisplaySubject(subjectName: string): string {
+  if (subjectName === "Matematik AYT" || subjectName === "Matematik TYT") {
+    return "Matematik";
+  }
+  if (subjectName === "Türk Dili ve Edebiyatı") return "Edebiyat";
+  if (subjectName === "Türkçe TYT") return "Türkçe";
+  if (subjectName === "Din Kültürü ve Ahlak Bilgisi") return "Din Kültürü";
+  return subjectName;
+}
+
+function getDifficulty(topicName: string): "easy" | "medium" | "hard" {
+  if (/limit|türev|integral|denge|analitik|olasılık|fonksiyon/i.test(topicName)) {
+    return "hard";
+  }
+  if (/anlam|giriş|temel|özellik|bilgi/i.test(topicName)) return "easy";
+  return "medium";
 }
