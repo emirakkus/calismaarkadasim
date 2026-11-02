@@ -2,27 +2,27 @@ import { YKS_EA_CURRICULUM } from "@/lib/yks-ea-curriculum";
 
 const FLASHCARD_ANSWERS: Record<string, readonly string[]> = {
   "Türkçe TYT": [
-    "Sözcüğün gerçek, yan ve mecaz anlamı cümledeki bağlama göre belirlenir.",
-    "Cümlede neden-sonuç, amaç-sonuç, koşul ve karşılaştırma ilişkilerini ara.",
-    "Ana düşünce yazarın paragraf boyunca savunduğu temel yargıdır.",
-    "Paragraf genellikle konuya giriş, açıklama ve sonuç bölümlerinden oluşur.",
-    "Sözel mantıkta verilen koşulları tabloya aktar; kesin olmayanı varsayma.",
-    "Ünlü uyumu, ünsüz benzeşmesi ve ses düşmesi başlıca ses olaylarıdır.",
-    "Bağlaç olan “de/da” ayrı; bulunma eki “-de/-da” bitişik yazılır.",
-    "Virgül eş görevli ögeleri, noktalı virgül grupları; iki nokta açıklamayı belirtir.",
-    "Yapım eki yeni sözcük türetir; çekim eki sözcüğün görevini veya biçimini değiştirir.",
-    "İsimler varlıkları karşılar; özel adlar büyük harfle başlar.",
-    "Sıfat, ismi niteler veya belirtir; yanında nitelediği ya da belirttiği isim bulunur.",
-    "Zamir, ismin yerini tutar; kişi, işaret, belgisiz ve soru türleri vardır.",
-    "Zarf; fiili, sıfatı veya başka bir zarfı zaman, durum, miktar ya da yer bakımından etkiler.",
-    "Edat tek başına anlam ilişkisi kurar; bağlaç eş görevli sözcükleri bağlar.",
-    "Fiiller iş, oluş veya durum bildirir; kip ve kişi eki alabilir.",
-    "Ek fiil isim soylu sözcükleri yüklem yapar ve birleşik zaman kurar.",
-    "Etken çatıda işi özne yapar; edilgen çatıda işi yapan belirtilmez.",
-    "Fiilimsi, fiilden türeyip cümlede isim, sıfat veya zarf görevinde kullanılan sözcüktür.",
-    "Cümlenin ögeleri yükleme sorulan uygun sorularla bulunur; önce yüklemi belirle.",
-    "Cümleler yüklemin türüne, yerine ve anlamına göre sınıflandırılır.",
-    "Anlatım bozukluğu; gereksiz sözcük, anlam çelişkisi veya dil bilgisi uyumsuzluğundan doğar.",
+    "Sözcüğün gerçek anlamı temel anlamıdır; yan anlam temel anlamla bağlantılı yeni kullanımdır, mecaz anlamda ise sözcük gerçek anlamından uzaklaşır. “Masanın ayağı” yan, “bu sözlere çok kırıldım” mecaz anlam örneğidir.",
+    "Neden-sonuçta gerçekleşmiş bir olayın nedeni verilir (“Yağmur yağdığı için ıslandık”); amaç-sonuçta hedef belirtilir (“Islanmamak için şemsiye aldı”); koşulda gerçekleşme bir şarta bağlıdır (“Düzenli çalışırsan başarırsın”).",
+    "Konu, paragrafın ne anlattığıdır; ana düşünce yazarın konu hakkında asıl savunduğu yargıdır. Ana düşünce çoğu zaman paragrafın tamamını kapsar, tek bir örneğe indirgenmez.",
+    "Paragrafta giriş bölümü konuyu tanıtır, gelişme düşünceyi örnek ve açıklamalarla açar, sonuç toparlar. Paragrafı tamamlarken önceki cümleyle anlam ve bağlaç uyumunu da kontrol et.",
+    "Sözel mantıkta kişi, gün veya sıra bilgilerini tabloya yerleştir; kesin koşulları önce uygula, olasılıkları ayrı ayrı dene. Verilmeyen bir bilgiyi kesinmiş gibi kabul etme.",
+    "Ünsüz benzeşmesi: sert ünsüzle biten sözcüğe c/d/g ile başlayan ek gelince ek sertleşir: kitap+cı → kitapçı. Ünsüz yumuşaması: p/ç/t/k, ünlüyle başlayan ek alınca çoğunlukla b/c/d/ğ olur: kitap+ı → kitabı. Ünlü düşmesi: burun+u → burnu.",
+    "Bağlaç olan “de/da” “dahi” anlamındadır, ayrı yazılır ve “te/ta” olmaz: “Ben de geldim.” Bulunma hâl eki bitişiktir ve ünsüz uyumuna girer: “evde”, “kitapta”. “Benimde” değil “benim de”; “Ankara'da” ise ek kesmeyle ayrılır.",
+    "Virgül eş görevli sözcükleri ve sıralı cümleleri ayırır; noktalı virgül, içinde virgül bulunan grupları ayırabilir. İki nokta açıklama veya örnekten önce, üç nokta tamamlanmamış anlatımda kullanılır. Özel adlara gelen çekim ekleri kesmeyle ayrılır: “Ankara'ya”.",
+    "Yapım eki yeni anlamlı sözcük türetir (“göz+lük”); çekim eki yeni sözcük türetmeden görev veya ilişki kurar (“ev+ler+imiz+de”). Yapım eki genellikle çekim eklerinden önce gelir.",
+    "İsimler varlık, kavram ve durumları karşılar; “kim, ne?” sorularına yanıt verir. Özel adlar büyük harfle başlar. Özel ada gelen çekim eki kesmeyle ayrılır (“Türkiye'nin”), yapım eki ayrılmaz (“Türkçenin”).",
+    "Sıfat ismi niteler veya belirtir ve genellikle isimden önce gelir (“eski kitap”, “üç öğrenci”). İsmin yerini tek başına tutarsa adlaşmış sıfat olur (“Çalışkanlar kazandı”). Niteleme sıfatı “nasıl?”, belirtme sıfatı “hangi, kaç, kaçıncı?” sorularına yanıt verir.",
+    "Zamir ismin yerini tutar: kişi (“ben”), işaret (“bunu”), belgisiz (“bazısı”), soru (“kim?”) ve dönüşlülük (“kendi”) zamirleri vardır. “Bu benim”de bu zamir, “bu kitap”ta isimle kullanıldığı için işaret sıfatıdır.",
+    "Zarf; fiili, sıfatı veya başka bir zarfı zaman (“dün geldi”), durum (“hızlı koştu”), miktar (“çok güzel”) ya da yer-yön (“içeri girdi”) bakımından etkiler. Yer-yön sözcüğü isim çekim eki alırsa zarf olmaktan çıkar: “dışarı çıktı / dışarıya çıktı”.",
+    "Edat tek başına tam bir anlam taşımaz, sözcükler arasında ilişki kurar (“senin için”). Bağlaç sözcükleri veya cümleleri bağlar (“Ali ve Ece”). “Yalnız” ve “ancak” gibi sözcüklerin türü cümledeki kullanımına göre değişebilir.",
+    "Fiiller iş (“yazdı”), oluş (“sarardı”) veya durum (“bekledi”) bildirir. Kip zaman ya da dilek anlamı, kişi eki işi yapanı gösterir. Fiilde kip ve kişi eklerini bulmak için önce fiil kökünü belirle.",
+    "Ek fiilin iki temel görevi vardır: isim soylu sözcükleri yüklem yapmak (“Hava güzeldi”) ve basit zamanlı fiile eklenerek birleşik zaman kurmak (“geliyordu”). Ek fiilin geniş zamanında “-im, -sin, -dir...” biçimleri görülebilir.",
+    "Etken çatıda özne işi yapar (“Çocuk camı kırdı”); edilgen çatıda işi yapan belli değildir, nesne özne görevine geçer (“Cam kırıldı”). Dönüşlü çatıda özne işi kendisi için yapar; işteş çatıda iş karşılıklı veya birlikte yapılır.",
+    "Fiilimsi, fiil kök veya gövdesinden türeyip cümlede isim, sıfat ya da zarf görevi alan sözcüktür; çekimli fiil değildir. İsim-fiil “-ma/-ış/-mak”, sıfat-fiil “-an/-ası/-mez...” ve zarf-fiil “-ken/-ince/-ip...” ekleriyle tanınabilir.",
+    "Ögeleri bulurken önce yüklemi belirle; sonra yükleme “kim/ne?” sorusuyla özneyi, “neyi/kimi?” ile belirtili nesneyi, “ne?” ile belirtisiz nesneyi sor. Yer tamlayıcısı “-e/-de/-den”, zarf tümleci ise zaman, durum, miktar veya neden bildirir.",
+    "Cümleler yüklemin türüne göre isim/fiil, yerine göre kurallı/devrik, anlamına göre olumlu/olumsuz/soru cümlesi olabilir. Bir cümle aynı anda bu ölçütlerin her birine göre ayrı ayrı sınıflandırılır.",
+    "Anlatım bozukluğunda gereksiz sözcüğü (“geri iade”), anlam çelişkisini (“kesinlikle olabilir”), yanlış sözcük seçimini ve özne-yüklem uyumsuzluğunu ara. “Yanlış” doğru yazımdır; “yalnış” yazım yanlışıdır. Cümleyi anlamı değişmeden gereksiz bölüm çıkarılabiliyor mu diye kontrol et.",
   ],
   "Matematik TYT": [
     "Sayı kümeleri doğal, tam, rasyonel, irrasyonel ve gerçek sayıları kapsar.",
@@ -271,8 +271,71 @@ export type Flashcard = {
   back: string;
 };
 
+const EXTRA_TURKISH_FLASHCARDS: Flashcard[] = [
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "Sınavlarda sık karıştırılan sözcükler nasıl yazılır?",
+    back: "“Her şey, bir şey, pek çok, art arda, yanı sıra, göz ardı” ayrı; “birçok, birkaç, hiçbir, gitgide, olağanüstü” bitişik yazılır. “Herkez” değil “herkes”, “yanlız” değil “yalnız”, “yalnış” değil “yanlış”, “traş” değil “tıraş” doğrudur.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "“De/da”nın bağlaç mı bulunma eki mi olduğunu nasıl ayırt edersin?",
+    back: "Bağlaç olan de/da cümleden çıkarılınca temel yapı bozulmaz ve “dahi” anlamı verir: “Ece de geldi.” Ayrı yazılır, ta/te biçimine dönüşmez. Bulunma eki sözcüğe bitişir ve sert ünsüz uyumuyla “-ta/-te” olabilir: “evde, ağaçta”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "“Ki” ne zaman ayrı, ne zaman bitişik yazılır?",
+    back: "Bağlaç olan ki ayrı yazılır: “Duydum ki sınav ertelenmiş.” Bir isme bağlı ilgi eki veya sıfat yapan ek olan -ki bitişiktir: “onunki, sınıftaki öğrenciler”. Kalıplaşmış “belki, çünkü, sanki, oysaki, hâlbuki, mademki, meğerki” bitişik yazılır.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "Soru eki “mı/mi” ve sonrasındaki ekler nasıl yazılır?",
+    back: "Soru eki kendinden önceki sözcükten ayrı yazılır: “Beni duydun mu?” Kişi veya zaman eki soru ekine bitişir: “Gelecek misiniz?”, “Biliyor muydu?”, “Güzel miydi?” Soru eki cümleye soru anlamı katmasa da ayrı yazılır.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Yazım Kuralları",
+    front: "Birleşik fiillerde bitişik ve ayrı yazım nasıl ayırt edilir?",
+    back: "Ses düşmesi veya türemesi varsa genellikle bitişik yazılır: “hissetmek, affetmek, reddetmek”. Ses olayı yoksa yardımcı fiil ayrı yazılır: “yardım etmek, fark etmek, terk etmek”. Birleşik fiili yazarken söylenişteki ses değişimine dikkat et.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Noktalama İşaretleri",
+    front: "Virgül, noktalı virgül ve iki nokta hangi durumlarda karıştırılır?",
+    back: "Virgül eş görevli sözcükleri ve sıralı cümleleri ayırır. Noktalı virgül, içinde virgül bulunan grupları birbirinden ayırmada kullanılır. İki nokta, ardından örnek veya açıklama verilecek ifadeden sonra gelir: “Üç şey al: kalem, defter, silgi.”",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Noktalama İşaretleri",
+    front: "Kesme işareti özel adlara gelen her ekte kullanılır mı?",
+    back: "Özel adlara gelen çekim ekleri kesmeyle ayrılır: “Ankara'ya”, “Ayşe'nin”. Yapım ekleri ve bunlardan sonra gelen ekler ayrılmaz: “Türkçenin”, “İstanbullu”. Kurum ve kuruluş adlarına gelen ekler de genel olarak kesmeyle ayrılmaz: “Türk Dil Kurumuna”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Ses Bilgisi",
+    front: "Ünsüz benzeşmesi ile ünsüz yumuşaması nasıl ayırt edilir?",
+    back: "Ünsüz benzeşmesinde sert ünsüzle biten sözcüğe gelen c/d/g, ç/t/k'ye dönüşür: “kitapçı, sınıfta”. Ünsüz yumuşamasında p/ç/t/k ile biten sözcük ünlüyle başlayan ek alınca çoğunlukla b/c/d/ğ olur: “kitabı, ağacı, kanadı, çocuğu”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Ses Bilgisi",
+    front: "Ünlü düşmesi ve ünlü daralmasına örnek ver.",
+    back: "İki heceli bazı sözcükler ünlüyle başlayan ek alınca orta hecedeki dar ünlüyü düşürür: “burun-u → burnu”, “ağız-ı → ağzı”. “-yor” eki, a/e ünlüsünü daraltabilir: “başla-yor → başlıyor”, “bekle-yor → bekliyor”.",
+  },
+  {
+    subjectName: "Türkçe TYT",
+    topicName: "Anlatım Bozuklukları",
+    front: "Sık görülen sözcük ve anlatım yanlışlarını nasıl yakalarsın?",
+    back: "Gereksiz sözcük kullanımını (“geri iade”), anlamca çelişen sözleri (“kesinlikle olabilir”), yanlış sözcük seçimini ve özne-yüklem uyumsuzluğunu kontrol et. “Yanlış” doğru yazımdır; “yalnış” yazım yanlışıdır. Cümleyi anlamı değişmeden gereksiz bölüm çıkarılabiliyor mu diye gözden geçir.",
+  },
+];
+
 export function getFlashcards(): Flashcard[] {
-  return YKS_EA_CURRICULUM.flatMap((course) => {
+  const curriculumCards = YKS_EA_CURRICULUM.flatMap((course) => {
     const answers = FLASHCARD_ANSWERS[course.subjectName];
     if (!answers || answers.length !== course.topics.length) {
       throw new Error(`Flashcard içeriği eksik veya hatalı: ${course.subjectName}`);
@@ -285,4 +348,6 @@ export function getFlashcards(): Flashcard[] {
       back: answers[index],
     }));
   });
+
+  return [...curriculumCards, ...EXTRA_TURKISH_FLASHCARDS];
 }
